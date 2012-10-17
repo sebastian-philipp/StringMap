@@ -3,7 +3,7 @@
 -- ----------------------------------------------------------------------------
 
 {- |
-  Module     : Holumbus.Data.PrefixTree.FuzzySearch
+  Module     : Data.PrefixTree.FuzzySearch
   Copyright  : Copyright (C) 2009-2012 Uwe Schmidt
   License    : MIT
 
@@ -17,14 +17,14 @@
 
 -- ----------------------------------------------------------------------------
 
-module Holumbus.Data.PrefixTree.FuzzySearch
+module Data.PrefixTree.FuzzySearch
 where
 
 import           Data.Char
 
-import           Holumbus.Data.PrefixTree.Core
-import           Holumbus.Data.PrefixTree.PrefixSet
-import           Holumbus.Data.PrefixTree.Types
+import           Data.PrefixTree.Core
+import           Data.PrefixTree.PrefixSet
+import           Data.PrefixTree.Types
 
 -- ----------------------------------------
 

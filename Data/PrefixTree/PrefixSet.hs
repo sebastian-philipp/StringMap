@@ -3,7 +3,7 @@
 -- ----------------------------------------------------------------------------
 
 {- |
-  Module     : Holumbus.Data.PrefixTree.PrefixSet
+  Module     : Data.PrefixTree.PrefixSet
   Copyright  : Copyright (C) 2010 Uwe Schmidt
   License    : MIT
 
@@ -24,12 +24,12 @@
 
 -- ----------------------------------------------------------------------------
 
-module Holumbus.Data.PrefixTree.PrefixSet
+module Data.PrefixTree.PrefixSet
 where
 
 import           Data.List              ( sort, nub )
 
-import           Holumbus.Data.PrefixTree.Types
+import           Data.PrefixTree.Types
 
 -- ----------------------------------------
 

@@ -3,7 +3,7 @@
 -- ----------------------------------------------------------------------------
 
 {- |
-  Module     : Holumbus.Data.PrefixTree
+  Module     : Data.PrefixTree
   Copyright  : Copyright (C) 2009-2012 Uwe Schmidt
   License    : MIT
 
@@ -17,7 +17,7 @@
 
 -- ----------------------------------------------------------------------------
 
-module Holumbus.Data.PrefixTree
+module Data.PrefixTree
     ( PrefixTree (..)
     , Key
     , (!)
@@ -74,6 +74,6 @@ where
 
 import Prelude hiding ( succ, lookup, map, mapM, null )
 
-import Holumbus.Data.PrefixTree.Core
-import Holumbus.Data.PrefixTree.FuzzySearch
-import Holumbus.Data.PrefixTree.Types
+import Data.PrefixTree.Core
+import Data.PrefixTree.FuzzySearch
+import Data.PrefixTree.Types

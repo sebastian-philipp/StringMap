@@ -3,7 +3,7 @@
 -- ----------------------------------------------------------------------------
 
 {- |
-  Module     : Holumbus.Data.PrefixTree.Core
+  Module     : Data.PrefixTree.Core
   Copyright  : Copyright (C) 2009-2012 Uwe Schmidt
   License    : MIT
 
@@ -21,8 +21,8 @@
   Most other function names clash with "Prelude" names, therefore this module is usually
   imported @qualified@, e.g.
   
-  > import Holumbus.Data.PrefixTree (PrefixTree)
-  > import qualified Holumbus.Data.PrefixTree as T
+  > import Data.PrefixTree (PrefixTree)
+  > import qualified Data.PrefixTree as T
 
   Many functions have a worst-case complexity of /O(min(n,L))/. This means that the operation
   can become linear with the number of elements with a maximum of /L/, the length of the
@@ -38,7 +38,7 @@
 
 -- ----------------------------------------------------------------------------
 
-module Holumbus.Data.PrefixTree.Core
+module Data.PrefixTree.Core
 where
 
 import           Prelude        hiding ( succ, lookup, map, mapM, null )
@@ -53,8 +53,8 @@ import qualified Data.List      as L
 import qualified Data.Map       as M
 import           Data.Maybe
 
-import           Holumbus.Data.PrefixTree.Types
-import           Holumbus.Data.PrefixTree.PrefixSet
+import           Data.PrefixTree.Types
+import           Data.PrefixTree.PrefixSet
 
 data PrefixTree v       = Empty
                         | Val    { value' ::   v

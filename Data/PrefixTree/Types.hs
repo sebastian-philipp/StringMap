@@ -3,7 +3,7 @@
 -- ----------------------------------------------------------------------------
 
 {- |
-  Module     : Holumbus.Data.PrefixTree.Types
+  Module     : Data.PrefixTree.Types
   Copyright  : Copyright (C) 2009-2012 Uwe Schmidt
   License    : MIT
 
@@ -17,7 +17,7 @@
 
 -- ----------------------------------------------------------------------------
 
-module Holumbus.Data.PrefixTree.Types
+module Data.PrefixTree.Types
 where
 
 type Sym                = Char
