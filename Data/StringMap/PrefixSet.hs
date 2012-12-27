@@ -3,7 +3,7 @@
 -- ----------------------------------------------------------------------------
 
 {- |
-  Module     : Data.PrefixTree.PrefixSet
+  Module     : Data.StringMap.PrefixSet
   Copyright  : Copyright (C) 2010 Uwe Schmidt
   License    : MIT
 
@@ -11,9 +11,9 @@
   Stability  : experimental
   Portability: not portable
 
-  A simplified version of PrefixTree for implementing sets.
+  A simplified version of StringMap for implementing sets.
 
-  There is one important difference to the PrefixTree implementation:
+  There is one important difference to the StringMap implementation:
   The fields are not marked to be strict. This enables building the
   set on the fly.
 
@@ -24,17 +24,17 @@
 
 -- ----------------------------------------------------------------------------
 
-module Data.PrefixTree.PrefixSet
+module Data.StringMap.PrefixSet
 where
 
 import           Data.List              ( sort, nub )
 
-import           Data.PrefixTree.Types
+import           Data.StringMap.Types
 
 -- ----------------------------------------
 
 -- | Set of strings implemented as lazy prefix tree.
--- @type PrefixSet = PrefixTree ()@ is not feasable because of the strict fields in the PrefixTree definition
+-- @type PrefixSet = StringMap ()@ is not feasable because of the strict fields in the StringMap definition
 
 data PrefixSet                  = PSempty
                                 | PSelem  PrefixSet

@@ -3,7 +3,7 @@
 -- ----------------------------------------------------------------------------
 
 {- |
-  Module     : Data.PrefixTree.Types
+  Module     : Data.StringMap.Types
   Copyright  : Copyright (C) 2009-2012 Uwe Schmidt
   License    : MIT
 
@@ -11,13 +11,13 @@
   Stability  : experimental
   Portability: portable
 
-  Data types used in all PrefixTree modules
+  Data types used in all StringMap modules
 
 -}
 
 -- ----------------------------------------------------------------------------
 
-module Data.PrefixTree.Types
+module Data.StringMap.Types
 where
 
 type Sym                = Char

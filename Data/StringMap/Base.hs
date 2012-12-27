@@ -3,7 +3,7 @@
 -- ----------------------------------------------------------------------------
 
 {- |
-  Module     : Data.PrefixTree.Core
+  Module     : Data.StringMap.Base
   Copyright  : Copyright (C) 2009-2012 Uwe Schmidt
   License    : MIT
 
@@ -21,8 +21,8 @@
   Most other function names clash with "Prelude" names, therefore this module is usually
   imported @qualified@, e.g.
   
-  > import Data.PrefixTree (PrefixTree)
-  > import qualified Data.PrefixTree as T
+  > import Data.StringMap (StringMap)
+  > import qualified Data.StringMap as T
 
   Many functions have a worst-case complexity of /O(min(n,L))/. This means that the operation
   can become linear with the number of elements with a maximum of /L/, the length of the
@@ -38,7 +38,7 @@
 
 -- ----------------------------------------------------------------------------
 
-module Data.PrefixTree.Core
+module Data.StringMap.Core
 where
 
 import           Prelude        hiding ( succ, lookup, map, mapM, null )
@@ -53,17 +53,17 @@ import qualified Data.List      as L
 import qualified Data.Map       as M
 import           Data.Maybe
 
-import           Data.PrefixTree.Types
-import           Data.PrefixTree.PrefixSet
+import           Data.StringMap.Types
+import           Data.StringMap.PrefixSet
 
-data PrefixTree v       = Empty
+data StringMap v       = Empty
                         | Val    { value' ::   v
-                                 , tree   :: ! (PrefixTree v)
+                                 , tree   :: ! (StringMap v)
                                  }
                         | Branch { sym    :: {-# UNPACK #-}
                                              ! Sym
-                                 , child  :: ! (PrefixTree v)
-                                 , next   :: ! (PrefixTree v)
+                                 , child  :: ! (StringMap v)
+                                 , next   :: ! (StringMap v)
                                  }
 
                         -- the space optimisation nodes, these
@@ -74,26 +74,26 @@ data PrefixTree v       = Empty
                                  }
                         | Last   { sym    :: {-# UNPACK #-}
                                              ! Sym              -- the last entry in a branch list
-                                 , child  :: ! (PrefixTree v)   -- or no branch but a single child
+                                 , child  :: ! (StringMap v)   -- or no branch but a single child
                                  }
                         | LsSeq  { syms   :: ! Key1             -- a sequence of single childs
-                                 , child  :: ! (PrefixTree v)   -- in a last node
+                                 , child  :: ! (StringMap v)   -- in a last node
                                  } 
                         | BrSeq  { syms   :: ! Key1             -- a sequence of single childs
-                                 , child  :: ! (PrefixTree v)   -- in a branch node
-                                 , next   :: ! (PrefixTree v)
+                                 , child  :: ! (StringMap v)   -- in a branch node
+                                 , next   :: ! (StringMap v)
                                  } 
                         | LsSeL  { syms   :: ! Key1             -- a sequence of single childs
                                  , value' ::   v                -- with a leaf 
                                  } 
                         | BrSeL  { syms   :: ! Key1             -- a sequence of single childs
                                  , value' ::   v                -- with a leaf in a branch node
-                                 , next   :: ! (PrefixTree v)
+                                 , next   :: ! (StringMap v)
                                  } 
                         | BrVal  { sym    :: {-# UNPACK #-}
                                              ! Sym              -- a branch with a single char
                                  , value' ::   v                -- and a value
-                                 , next   :: ! (PrefixTree v)
+                                 , next   :: ! (StringMap v)
                                  }
                         | LsVal  { sym    :: {-# UNPACK #-}
                                              ! Sym              -- a last node with a single char
@@ -130,18 +130,18 @@ length1                 = length . toKey
 
 -- smart constructors
 
-empty                           :: PrefixTree v
+empty                           :: StringMap v
 empty                           = Empty
 
 {-# INLINE empty #-}
 
-val                             :: v -> PrefixTree v -> PrefixTree v
+val                             :: v -> StringMap v -> StringMap v
 val v Empty                     = Leaf v
 val v t                         = Val v t
 
 {-# INLINE val #-}
 
-branch                          :: Sym -> PrefixTree v -> PrefixTree v -> PrefixTree v
+branch                          :: Sym -> StringMap v -> StringMap v -> StringMap v
 branch !_k  Empty        n      = n
 
 branch !k (Leaf   v   ) Empty   = LsVal  k     v
@@ -158,19 +158,19 @@ branch !k (Last   k1 c) n       = brseq (Cons k (Cons k1 Nil)) c n
 branch !k (LsSeq  ks c) n       = brseq (Cons k ks) c n
 branch !k            c  n       = Branch k c n
 
-lsseq                           :: Key1 -> PrefixTree v -> PrefixTree v
+lsseq                           :: Key1 -> StringMap v -> StringMap v
 lsseq !k (Leaf v)               = LsSeL k v
 lsseq !k c                      = LsSeq k c
 
 {-# INLINE lsseq #-}
 
-brseq                           :: Key1 -> PrefixTree v -> PrefixTree v -> PrefixTree v
+brseq                           :: Key1 -> StringMap v -> StringMap v -> StringMap v
 brseq !k (Leaf v) n             = BrSeL k v n
 brseq !k c        n             = BrSeq k c n
 
 {-# INLINE brseq #-}
 
-siseq                           :: Key1 -> PrefixTree v -> PrefixTree v
+siseq                           :: Key1 -> StringMap v -> StringMap v
 siseq Nil   c                   = c
 siseq (Cons k1 Nil) c           = Last  k1 c
 siseq k    c                    = LsSeq k  c
@@ -179,7 +179,7 @@ siseq k    c                    = LsSeq k  c
 
 -- smart selectors
 
-norm                            :: PrefixTree v -> PrefixTree v
+norm                            :: StringMap v -> StringMap v
 norm (Leaf v)                   = Val v empty
 norm (Last k c)                 = Branch k c empty
 norm (LsSeq (Cons k Nil) c)     = Branch k c empty
@@ -194,7 +194,7 @@ norm t                          = t
 
 -- ----------------------------------------
 
-deepNorm                :: PrefixTree v -> PrefixTree v
+deepNorm                :: StringMap v -> StringMap v
 deepNorm t0
     = case norm t0 of
       Empty             -> Empty
@@ -211,7 +211,7 @@ normError f             = error (f ++ ": pattern match error, prefix tree not no
 
 -- | /O(1)/ Is the map empty?
 
-null                    :: PrefixTree a -> Bool
+null                    :: StringMap a -> Bool
 null Empty              = True
 null _                  = False
 
@@ -219,29 +219,29 @@ null _                  = False
 
 -- | /O(1)/ Create a map with a single element.
 
-singleton               :: Key -> a -> PrefixTree a
+singleton               :: Key -> a -> StringMap a
 singleton k v           = foldr (\ c r -> branch c r empty) (val v empty) $ k -- siseq k (val v empty)
 
 {-# INLINE singleton #-}
 
 -- | /O(1)/ Extract the value of a node (if there is one)
 
-value                   :: Monad m => PrefixTree a -> m a
+value                   :: Monad m => StringMap a -> m a
 value t                 = case norm t of
                           Val v _       -> return v
-                          _             -> fail "PrefixTree.value: no value at this node"
+                          _             -> fail "StringMap.value: no value at this node"
 
 {-# INLINE value #-}
 
 -- | /O(1)/ Extract the value of a node or return a default value if no value exists.
 
-valueWithDefault        :: a -> PrefixTree a -> a
+valueWithDefault        :: a -> StringMap a -> a
 valueWithDefault d t    = fromMaybe d . value $ t
 
 
 -- | /O(1)/ Extract the successors of a node
 
-succ                    :: PrefixTree a -> PrefixTree a
+succ                    :: StringMap a -> StringMap a
 succ t                  = case norm t of
                           Val _ t'      -> succ t'
                           t'            -> t'
@@ -252,36 +252,36 @@ succ t                  = case norm t of
 -- | /O(min(n,L))/ Find the value associated with a key. The function will @return@ the result in
 -- the monad or @fail@ in it if the key isn't in the map.
 
-lookup                          :: Monad m => Key -> PrefixTree a -> m a
+lookup                          :: Monad m => Key -> StringMap a -> m a
 lookup k t                      = case lookup' k t of
                                   Just v  -> return v
-                                  Nothing -> fail "PrefixTree.lookup: Key not found"
+                                  Nothing -> fail "StringMap.lookup: Key not found"
 {-# INLINE lookup #-}
 
 -- | /O(min(n,L))/ Find the value associated with a key. The function will @return@ the result in
 -- the monad or @fail@ in it if the key isn't in the map.
 
-findWithDefault                 :: a -> Key -> PrefixTree a -> a
+findWithDefault                 :: a -> Key -> StringMap a -> a
 findWithDefault v0 k            = fromMaybe v0 . lookup' k
 
 {-# INLINE findWithDefault #-}
 
 -- | /O(min(n,L))/ Is the key a member of the map?
 
-member                          :: Key -> PrefixTree a -> Bool
+member                          :: Key -> StringMap a -> Bool
 member k                        = maybe False (const True) . lookup k
 
 {-# INLINE member #-}
 
 -- | /O(min(n,L))/ Find the value at a key. Calls error when the element can not be found.
 
-(!)                             :: PrefixTree a -> Key -> a
-(!)                             = flip $ findWithDefault (error "PrefixTree.! : element not in the map")
+(!)                             :: StringMap a -> Key -> a
+(!)                             = flip $ findWithDefault (error "StringMap.! : element not in the map")
 
 -- | /O(min(n,L))/ Insert a new key and value into the map. If the key is already present in
 -- the map, the associated value will be replaced with the new value.
 
-insert                          :: Key -> a -> PrefixTree a -> PrefixTree a
+insert                          :: Key -> a -> StringMap a -> StringMap a
 insert                          = insertWith const
 
 {-# INLINE insert #-}
@@ -289,7 +289,7 @@ insert                          = insertWith const
 -- | /O(min(n,L))/ Insert with a combining function. If the key is already present in the map,
 -- the value of @f new_value old_value@ will be inserted.
 
-insertWith                      :: (a -> a -> a) -> Key -> a -> PrefixTree a -> PrefixTree a
+insertWith                      :: (a -> a -> a) -> Key -> a -> StringMap a -> StringMap a
 insertWith f                    = flip $ insert' f
 
 {-# INLINE insertWith #-}
@@ -297,7 +297,7 @@ insertWith f                    = flip $ insert' f
 -- | /O(min(n,L))/ Insert with a combining function. If the key is already present in the map,
 -- the value of @f key new_value old_value@ will be inserted.
 
-insertWithKey                   :: (Key -> a -> a -> a) -> Key -> a -> PrefixTree a -> PrefixTree a
+insertWithKey                   :: (Key -> a -> a -> a) -> Key -> a -> StringMap a -> StringMap a
 insertWithKey f k               = insertWith (f k) k
 
 
@@ -307,7 +307,7 @@ insertWithKey f k               = insertWith (f k) k
 -- element if the result of the updating function is 'Nothing'. If the key is not found, the trie
 -- is returned unchanged.
 
-update                          :: (a -> Maybe a) -> Key -> PrefixTree a -> PrefixTree a
+update                          :: (a -> Maybe a) -> Key -> StringMap a -> StringMap a
 update                          = update'
 
 {-# INLINE update #-}
@@ -316,7 +316,7 @@ update                          = update'
 -- element if the result of the updating function is 'Nothing'. If the key is not found, the trie
 -- is returned unchanged.
 
-updateWithKey                   :: (Key -> a -> Maybe a) -> Key -> PrefixTree a -> PrefixTree a
+updateWithKey                   :: (Key -> a -> Maybe a) -> Key -> StringMap a -> StringMap a
 updateWithKey f k               = update' (f k) k
 
 {-# INLINE updateWithKey #-}
@@ -324,14 +324,14 @@ updateWithKey f k               = update' (f k) k
 -- | /O(min(n,L))/ Delete an element from the map. If no element exists for the key, the map 
 -- remains unchanged.
 
-delete                          :: Key -> PrefixTree a -> PrefixTree a
+delete                          :: Key -> StringMap a -> StringMap a
 delete                          = update' (const Nothing)
 
 {-# INLINE delete #-}
 
 -- ----------------------------------------
 
-lookupPx'                       :: Key -> PrefixTree a -> PrefixTree a
+lookupPx'                       :: Key -> StringMap a -> StringMap a
 lookupPx' k0                    = look k0 . norm
     where
     look [] t                   = t
@@ -346,7 +346,7 @@ lookupPx' k0                    = look k0 . norm
 
 -- Internal lookup function which is generalised for arbitrary monads above.
 
-lookup'                         :: Key -> PrefixTree a -> Maybe a
+lookup'                         :: Key -> StringMap a -> Maybe a
 lookup' k t
     = case lookupPx' k t of
       Val v _                   -> Just v
@@ -356,18 +356,18 @@ lookup' k t
 
 -- | /O(max(L,R))/ Find all values where the string is a prefix of the key.
 
-prefixFind                      :: Key -> PrefixTree a -> [a] 
+prefixFind                      :: Key -> StringMap a -> [a]
 prefixFind k                    = elems . lookupPx' k
 
 -- | /O(max(L,R))/ Find all values where the string is a prefix of the key and include the keys 
 -- in the result.
 
-prefixFindWithKey               :: Key -> PrefixTree a -> [(Key, a)]
+prefixFindWithKey               :: Key -> StringMap a -> [(Key, a)]
 prefixFindWithKey k             = fmap (first (k ++)) . toList . lookupPx' k
 
 -- ----------------------------------------
 
-insert'                         :: (a -> a -> a) -> a -> Key -> PrefixTree a -> PrefixTree a
+insert'                         :: (a -> a -> a) -> a -> Key -> StringMap a -> StringMap a
 insert' f v k0                  = ins k0 . norm
     where
     ins'                        = insert' f v
@@ -391,7 +391,7 @@ insert' f v k0                  = ins k0 . norm
 
 -- ----------------------------------------
 
-update'                         :: (a -> Maybe a) -> Key -> PrefixTree a -> PrefixTree a
+update'                         :: (a -> Maybe a) -> Key -> StringMap a -> StringMap a
 update' f k0                    = upd k0 . norm
     where
     upd'                        = update' f
@@ -417,15 +417,15 @@ update' f k0                    = upd k0 . norm
 -- | /O(n+m)/ Left-biased union of two maps. It prefers the first map when duplicate keys are 
 -- encountered, i.e. ('union' == 'unionWith' 'const').
 
-union                                           :: PrefixTree a -> PrefixTree a -> PrefixTree a
+union                                           :: StringMap a -> StringMap a -> StringMap a
 union                                           = union' const
 
 -- | /O(n+m)/ Union with a combining function.
 
-unionWith                                       :: (a -> a -> a) -> PrefixTree a -> PrefixTree a -> PrefixTree a
+unionWith                                       :: (a -> a -> a) -> StringMap a -> StringMap a -> StringMap a
 unionWith                                       = union'
 
-union'                                          :: (a -> a -> a) -> PrefixTree a -> PrefixTree a -> PrefixTree a
+union'                                          :: (a -> a -> a) -> StringMap a -> StringMap a -> StringMap a
 union' f pt1 pt2                                = uni (norm pt1) (norm pt2)
     where
     uni' t1' t2'                                = union' f (norm t1') (norm t2')
@@ -451,10 +451,10 @@ union' f pt1 pt2                                = uni (norm pt1) (norm pt2)
 
 -- | /O(n+m)/ Union with a combining function, including the key.
 
-unionWithKey                                    :: (Key -> a -> a -> a) -> PrefixTree a -> PrefixTree a -> PrefixTree a
+unionWithKey                                    :: (Key -> a -> a -> a) -> StringMap a -> StringMap a -> StringMap a
 unionWithKey f                                  = union'' f id
 
-union''                                         :: (Key -> a -> a -> a) -> (Key -> Key) -> PrefixTree a -> PrefixTree a -> PrefixTree a
+union''                                         :: (Key -> a -> a -> a) -> (Key -> Key) -> StringMap a -> StringMap a -> StringMap a
 union'' f kf pt1 pt2                            = uni (norm pt1) (norm pt2)
     where
     uni' t1' t2'                                = union'' f kf (norm t1') (norm t2')
@@ -481,13 +481,13 @@ union'' f kf pt1 pt2                            = uni (norm pt1) (norm pt2)
 --
 -- | /(O(min(n,m))/ Difference between two tries (based on keys).
 
-difference                      :: PrefixTree a -> PrefixTree b -> PrefixTree a
+difference                      :: StringMap a -> StringMap b -> StringMap a
 difference                      = differenceWith (const (const Nothing))
 
 -- | /(O(min(n,m))/ Difference with a combining function. If the combining function always returns
 -- 'Nothing', this is equal to proper set difference.
 
-differenceWith                  :: (a -> b -> Maybe a) -> PrefixTree a -> PrefixTree b -> PrefixTree a
+differenceWith                  :: (a -> b -> Maybe a) -> StringMap a -> StringMap b -> StringMap a
 differenceWith f                = differenceWithKey (const f)
 
 -- | /O(min(n,m))/ Difference with a combining function, including the key. If two equal keys are
@@ -495,12 +495,12 @@ differenceWith f                = differenceWithKey (const f)
 -- 'Nothing', the element is discarded, if it returns 'Just' a value, the element is updated
 -- with the new value.
 
-differenceWithKey               :: (Key -> a -> b -> Maybe a) -> PrefixTree a -> PrefixTree b -> PrefixTree a
+differenceWithKey               :: (Key -> a -> b -> Maybe a) -> StringMap a -> StringMap b -> StringMap a
 differenceWithKey f             = diff'' f id
 
 diff''                          :: (Key -> a -> b -> Maybe a) ->
                                    (Key -> Key) ->
-                                   PrefixTree a -> PrefixTree b -> PrefixTree a
+                                   StringMap a -> StringMap b -> StringMap a
 diff'' f kf pt1 pt2             = dif (norm pt1) (norm pt2)
     where
     dif' t1' t2'                = diff'' f kf (norm t1') (norm t2')
@@ -533,7 +533,7 @@ diff'' f kf pt1 pt2             = dif (norm pt1) (norm pt2)
 --
 -- @lookup' k' . cutPx' (singlePS k) $ t == Nothing@ for every @k'@ with @k@ not being a prefix of @k'@ 
  
-cutPx''                         :: (PrefixTree a -> PrefixTree a) -> PrefixSet -> PrefixTree a -> PrefixTree a
+cutPx''                         :: (StringMap a -> StringMap a) -> PrefixSet -> StringMap a -> StringMap a
 cutPx'' cf s1' t2'              = cut s1' (norm t2')
     where
     cut     PSempty           _t2               = empty
@@ -546,10 +546,10 @@ cutPx'' cf s1' t2'              = cut s1' (norm t2')
         | otherwise                             = branch c1 (cutPx'' cf s1 s2) (cutPx'' cf n1 n2)
     cut _                    _                  = normError "cutPx''"
 
-cutPx'                          :: PrefixSet -> PrefixTree a -> PrefixTree a
+cutPx'                          :: PrefixSet -> StringMap a -> StringMap a
 cutPx'                          = cutPx'' id
 
-cutAllPx'                       :: PrefixSet -> PrefixTree a -> PrefixTree a
+cutAllPx'                       :: PrefixSet -> StringMap a -> StringMap a
 cutAllPx'                       = cutPx'' (cv . norm)
     where
     cv (Val v _)                = val v empty
@@ -559,15 +559,15 @@ cutAllPx'                       = cutPx'' (cv . norm)
 
 -- | /O(n)/ Map a function over all values in the prefix tree.
 
-map                             :: (a -> b) -> PrefixTree a -> PrefixTree b
+map                             :: (a -> b) -> StringMap a -> StringMap b
 map f                           = mapWithKey (const f)
 
 
-mapWithKey                      :: (Key -> a -> b) -> PrefixTree a -> PrefixTree b
+mapWithKey                      :: (Key -> a -> b) -> StringMap a -> StringMap b
 mapWithKey f                    = map' f id
 
 
-map'                            :: (Key -> a -> b) -> (Key -> Key) -> PrefixTree a -> PrefixTree b
+map'                            :: (Key -> a -> b) -> (Key -> Key) -> StringMap a -> StringMap b
 map' _ _ (Empty)                = Empty
 map' f k (Val v t)              = Val       (f (k []) v)             (map' f k t)
 map' f k (Branch c s n)         = Branch c  (map' f ((c :) . k)   s) (map' f k n)
@@ -584,14 +584,14 @@ map' f k (BrVal c  v n)         = BrVal  c  (f (k []) v)             (map' f k n
 
 -- | Variant of map that works on normalized trees
 
-mapN                            :: (a -> b) -> PrefixTree a -> PrefixTree b
+mapN                            :: (a -> b) -> StringMap a -> StringMap b
 mapN f                          = mapWithKeyN (const f)
 
 
-mapWithKeyN                     :: (Key -> a -> b) -> PrefixTree a -> PrefixTree b
+mapWithKeyN                     :: (Key -> a -> b) -> StringMap a -> StringMap b
 mapWithKeyN f                   = map'' f id
 
-map''                           :: (Key -> a -> b) -> (Key -> Key) -> PrefixTree a -> PrefixTree b
+map''                           :: (Key -> a -> b) -> (Key -> Key) -> StringMap a -> StringMap b
 map'' f k                       = mapn . norm
     where
     mapn Empty                  = empty
@@ -603,15 +603,15 @@ map'' f k                       = mapn . norm
 
 -- | Monadic map
 
-mapM                            :: Monad m => (a -> m b) -> PrefixTree a -> m (PrefixTree b)
+mapM                            :: Monad m => (a -> m b) -> StringMap a -> m (StringMap b)
 mapM f                          = mapWithKeyM (const f)
 
 -- | Monadic mapWithKey
 
-mapWithKeyM                     :: Monad m => (Key -> a -> m b) -> PrefixTree a -> m (PrefixTree b)
+mapWithKeyM                     :: Monad m => (Key -> a -> m b) -> StringMap a -> m (StringMap b)
 mapWithKeyM f                   = mapM'' f id
 
-mapM''                          :: Monad m => (Key -> a -> m b) -> (Key -> Key) -> PrefixTree a -> m (PrefixTree b)
+mapM''                          :: Monad m => (Key -> a -> m b) -> (Key -> Key) -> StringMap a -> m (StringMap b)
 mapM'' f k                      = mapn . norm
     where
     mapn Empty                  = return $ empty
@@ -643,7 +643,7 @@ data PrefixTreeVisitor a b      = PTV
     , v_brval           :: Sym  -> a -> b -> b
     }
 
-visit                   :: PrefixTreeVisitor a b -> PrefixTree a -> b
+visit                   :: PrefixTreeVisitor a b -> StringMap a -> b
 
 visit v (Empty)         = v_empty  v
 visit v (Val v' t)      = v_val    v v' (visit v t)
@@ -667,7 +667,7 @@ visit v (BrVal c  v' n) = v_brval  v c  v'          (visit v n)
 -- for values only the ref to the value is counted, not the space for the value itself
 -- key chars are assumed to be unboxed
 
-space                   :: PrefixTree a -> Int
+space                   :: StringMap a -> Int
 space                   = visit $
                           PTV
                           { v_empty             = 0
@@ -683,7 +683,7 @@ space                   = visit $
                           , v_brval             = \ _  _ n -> 4                     + n
                           }
 
-keyChars                :: PrefixTree a -> Int
+keyChars                :: StringMap a -> Int
 keyChars                = visit $
                           PTV
                           { v_empty             = 0
@@ -703,7 +703,7 @@ keyChars                = visit $
 --
 -- | statistics about the # of different nodes in an optimized prefix tree
 
-stat                    :: PrefixTree a -> PrefixTree Int
+stat                    :: StringMap a -> StringMap Int
 stat                    =  visit $
                           PTV
                           { v_empty             =             singleton "empty"  1
@@ -725,21 +725,21 @@ stat                    =  visit $
 
 -- | /O(n)/ Fold over all key\/value pairs in the map.
 
-foldWithKey                     :: (Key -> a -> b -> b) -> b -> PrefixTree a -> b
+foldWithKey                     :: (Key -> a -> b -> b) -> b -> StringMap a -> b
 foldWithKey f e                 = fold' f e id
 
 {-# INLINE foldWithKey #-}
 
 -- | /O(n)/ Fold over all values in the map.
 
-fold :: (a -> b -> b) -> b -> PrefixTree a -> b
+fold :: (a -> b -> b) -> b -> StringMap a -> b
 fold f = foldWithKey $ const f
 
 {-# INLINE fold #-}
 
 {- not yet used
 
-foldTopDown                     :: (Key -> a -> b -> b) -> b -> (Key -> Key) -> PrefixTree a -> b
+foldTopDown                     :: (Key -> a -> b -> b) -> b -> (Key -> Key) -> StringMap a -> b
 foldTopDown f r k0              = fo k0 . norm
     where
     fo kf (Branch c' s' n')     = let r' = foldTopDown f r ((c' :) . kf) s' in foldTopDown f r' kf n'
@@ -748,7 +748,7 @@ foldTopDown f r k0              = fo k0 . norm
     fo _  _                     = normError "foldTopDown"
 -- -}
 
-fold'                           :: (Key -> a -> b -> b) -> b -> (Key -> Key) -> PrefixTree a -> b
+fold'                           :: (Key -> a -> b -> b) -> b -> (Key -> Key) -> StringMap a -> b
 fold' f r k0                    = fo k0 . norm
     where
     fo kf (Branch c' s' n')     = let r' = fold' f r kf n' in fold' f r' (kf . (c':)) s'
@@ -758,33 +758,33 @@ fold' f r k0                    = fo k0 . norm
 
 -- | /O(n)/ Convert into an ordinary map.
 
-toMap                           :: PrefixTree a -> M.Map Key a
+toMap                           :: StringMap a -> M.Map Key a
 toMap                           = foldWithKey M.insert M.empty
 
 -- | /O(n)/ Convert an ordinary map into a Prefix tree
 
-fromMap                         :: M.Map Key a -> PrefixTree a
+fromMap                         :: M.Map Key a -> StringMap a
 fromMap                         = M.foldrWithKey insert empty
 
 -- | /O(n)/ Returns all elements as list of key value pairs,
 
-toList                          :: PrefixTree a -> [(Key, a)]
+toList                          :: StringMap a -> [(Key, a)]
 toList                          = foldWithKey (\k v r -> (k, v) : r) []
 
 -- | /O(n)/ Creates a trie from a list of key\/value pairs.
-fromList                        :: [(Key, a)] -> PrefixTree a
+fromList                        :: [(Key, a)] -> StringMap a
 fromList                        = L.foldl' (\p (k, v) -> insert k v p) empty
 
 -- | /O(n)/ The number of elements.
-size                            :: PrefixTree a -> Int
+size                            :: StringMap a -> Int
 size                            = fold (const (+1)) 0
 
 -- | /O(n)/ Returns all values.
-elems                           :: PrefixTree a -> [a]
+elems                           :: StringMap a -> [a]
 elems                           = fold (:) []
 
 -- | /O(n)/ Returns all values.
-keys                            :: PrefixTree a -> [Key]
+keys                            :: StringMap a -> [Key]
 keys                            = foldWithKey (\ k _v r -> k : r) []
 
 -- ----------------------------------------
@@ -804,7 +804,7 @@ keys                            = foldWithKey (\ k _v r -> k : r) []
 -- >        takeWhile (not . null) $                
 -- >        iterate (concatMap subForest) [t]
 
-toListBF                        :: PrefixTree v -> [(Key, v)]
+toListBF                        :: StringMap v -> [(Key, v)]
 toListBF                        = (\ t0 -> [(id, t0)])
                                   >>>
                                   iterate (concatMap (second norm >>> uncurry subForest))
@@ -815,35 +815,35 @@ toListBF                        = (\ t0 -> [(id, t0)])
                                   >>>
                                   concatMap (second norm >>> uncurry rootLabel)
 
-rootLabel                       :: (Key -> Key) -> PrefixTree v -> [(Key, v)]
+rootLabel                       :: (Key -> Key) -> StringMap v -> [(Key, v)]
 rootLabel kf (Val v _)          = [(kf [], v)]
 rootLabel _  _                  = []
 
-subForest                       :: (Key -> Key) -> PrefixTree v -> [(Key -> Key, PrefixTree v)]
+subForest                       :: (Key -> Key) -> StringMap v -> [(Key -> Key, StringMap v)]
 subForest kf (Branch c s n)     = (kf . (c:), s) : subForest kf (norm n)
 subForest _  Empty              = []
 subForest kf (Val _ t)          = subForest kf (norm t)
-subForest _  _                  = error "PrefixTree.Core.subForest: Pattern match failure"
+subForest _  _                  = error "StringMap.Core.subForest: Pattern match failure"
  
 -- ----------------------------------------
 
 -- | /O(max(L,R))/ Find all values where the string is a prefix of the key and include the keys 
 -- in the result. The result list contains short words first
 
-prefixFindWithKeyBF             :: Key -> PrefixTree a -> [(Key, a)]
+prefixFindWithKeyBF             :: Key -> StringMap a -> [(Key, a)]
 prefixFindWithKeyBF k           = fmap (first (k ++)) . toListBF . lookupPx' k
 
 -- ----------------------------------------
 
-instance Functor PrefixTree where
+instance Functor StringMap where
   fmap = map
 
-instance Data.Foldable.Foldable PrefixTree where
+instance Data.Foldable.Foldable StringMap where
   foldr = fold
 
 {- for debugging not yet enabled
 
-instance Show a => Show (PrefixTree a) where
+instance Show a => Show (StringMap a) where
   showsPrec d m   = showParen (d > 10) $
     showString "fromList " . shows (toList m)
 
@@ -851,7 +851,7 @@ instance Show a => Show (PrefixTree a) where
 
 -- ----------------------------------------
 
-instance Read a => Read (PrefixTree a) where
+instance Read a => Read (StringMap a) where
   readsPrec p = readParen (p > 10) $
     \ r -> do
            ("fromList",s) <- lex r
@@ -860,7 +860,7 @@ instance Read a => Read (PrefixTree a) where
 
 -- ----------------------------------------
 
-instance NFData a => NFData (PrefixTree a) where
+instance NFData a => NFData (StringMap a) where
     rnf (Empty)         = ()
     rnf (Val v t)       = rnf v `seq` rnf t
     rnf (Branch _c s n) = rnf s `seq` rnf n
@@ -877,7 +877,7 @@ instance NFData a => NFData (PrefixTree a) where
 --
 -- Provide native binary serialization (not via to-/fromList).
 
-instance (Binary a) => Binary (PrefixTree a) where
+instance (Binary a) => Binary (StringMap a) where
     put (Empty)         = put (0::Word8)
     put (Val v t)       = put (1::Word8)  >> put v >> put t
     put (Branch c s n)  = put (2::Word8)  >> put c >> put s >> put n
@@ -937,6 +937,6 @@ instance (Binary a) => Binary (PrefixTree a) where
                         !v <- get
                         !n <- get
                         return $! BrVal k v n
-                   _ -> fail "PrefixTree.get: error while decoding PrefixTree"
+                   _ -> fail "StringMap.get: error while decoding StringMap"
 
 -- ----------------------------------------

@@ -3,7 +3,7 @@
 -- ----------------------------------------------------------------------------
 
 {- |
-  Module     : Data.PrefixTree.FuzzySearch
+  Module     : Data.StringMap.FuzzySearch
   Copyright  : Copyright (C) 2009-2012 Uwe Schmidt
   License    : MIT
 
@@ -17,29 +17,29 @@
 
 -- ----------------------------------------------------------------------------
 
-module Data.PrefixTree.FuzzySearch
+module Data.StringMap.FuzzySearch
 where
 
 import           Data.Char
 
-import           Data.PrefixTree.Core
-import           Data.PrefixTree.PrefixSet
-import           Data.PrefixTree.Types
+import           Data.StringMap.Core
+import           Data.StringMap.PrefixSet
+import           Data.StringMap.Types
 
 -- ----------------------------------------
 
 -- | /O(max(L,R))/ Find all values where the string is a prefix of the key.
 
-prefixFindCaseWithKey           :: Key -> PrefixTree a -> [(Key, a)] 
+prefixFindCaseWithKey           :: Key -> StringMap a -> [(Key, a)] 
 prefixFindCaseWithKey k         = toList . cutPx' (singlePS k) 
 
-prefixFindNoCaseWithKey         :: Key -> PrefixTree a -> [(Key, a)] 
+prefixFindNoCaseWithKey         :: Key -> StringMap a -> [(Key, a)] 
 prefixFindNoCaseWithKey k       = toList . cutPx' (noCaseKeys k) 
 
-prefixFindNoCase                :: Key -> PrefixTree a -> [a] 
+prefixFindNoCase                :: Key -> StringMap a -> [a] 
 prefixFindNoCase k              = elems . cutPx' (noCaseKeys k)
 
-lookupNoCase                    :: Key -> PrefixTree a -> [(Key, a)]
+lookupNoCase                    :: Key -> StringMap a -> [(Key, a)]
 lookupNoCase k                  = toList . cutAllPx' (noCaseKeys k)
 
 -- ----------------------------------------
@@ -47,13 +47,13 @@ lookupNoCase k                  = toList . cutAllPx' (noCaseKeys k)
 -- | /O(max(L,R))/ Find all values where the string is a prefix of the key.
 -- Breadth first variant, short words first in the result list
 
-prefixFindCaseWithKeyBF         :: Key -> PrefixTree a -> [(Key, a)] 
+prefixFindCaseWithKeyBF         :: Key -> StringMap a -> [(Key, a)] 
 prefixFindCaseWithKeyBF k       = toListBF . cutPx' (singlePS k) 
 
-prefixFindNoCaseWithKeyBF       :: Key -> PrefixTree a -> [(Key, a)] 
+prefixFindNoCaseWithKeyBF       :: Key -> StringMap a -> [(Key, a)] 
 prefixFindNoCaseWithKeyBF k     = toListBF . cutPx' (noCaseKeys k) 
 
-lookupNoCaseBF                  :: Key -> PrefixTree a -> [(Key, a)]
+lookupNoCaseBF                  :: Key -> StringMap a -> [(Key, a)]
 lookupNoCaseBF k                = toListBF . cutAllPx' (noCaseKeys k)
 
 -- ----------------------------------------

@@ -3,7 +3,7 @@
 -- ----------------------------------------------------------------------------
 
 {- |
-  Module     : Data.PrefixTree
+  Module     : Data.StringMap
   Copyright  : Copyright (C) 2009-2012 Uwe Schmidt
   License    : MIT
 
@@ -17,8 +17,8 @@
 
 -- ----------------------------------------------------------------------------
 
-module Data.PrefixTree
-    ( PrefixTree (..)
+module Data.StringMap
+    ( StringMap (..)
     , Key
     , (!)
     , value
@@ -74,6 +74,6 @@ where
 
 import Prelude hiding ( succ, lookup, map, mapM, null )
 
-import Data.PrefixTree.Core
-import Data.PrefixTree.FuzzySearch
-import Data.PrefixTree.Types
+import Data.StringMap.Base
+import Data.StringMap.FuzzySearch
+import Data.StringMap.Types

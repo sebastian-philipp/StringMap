@@ -6,8 +6,9 @@
 # ---------------------------------------------
 
 OTHER_FILES += README.md
-OTHER_FILES += src/Data/PrefixTree.hs
-OTHER_FILES += src/Data/PrefixTree/Core.hs
-OTHER_FILES += src/Data/PrefixTree/FuzzySearch.hs
-OTHER_FILES += src/Data/PrefixTree/PrefixSet.hs
-OTHER_FILES += src/Data/PrefixTree/Types.hs
+OTHER_FILES += Data/StringMap/PrefixSet.hs
+OTHER_FILES += Data/StringMap/Types.hs
+OTHER_FILES += Data/StringMap/FuzzySearch.hs
+OTHER_FILES += Data/StringMap/Base.hs
+OTHER_FILES += Data/StringMap.hs
+
