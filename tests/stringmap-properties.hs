@@ -7,6 +7,7 @@ import Data.StringMap
 --import Data.Function
 import Prelude hiding (lookup, null, map, filter, foldr, foldl)
 import qualified Prelude (map)
+import qualified Data.Map as Data.Map
 
 --import Data.List (nub,sort)
 --import qualified Data.List as List
@@ -24,6 +25,8 @@ main :: IO ()
 main = defaultMain
          [ testCase "empty" test_empty
          , testCase "singleton" test_singleton
+         , testProperty "insert to singleton"  prop_singleton
+         , testProperty "map a StringMap" prop_map
          ]
 
 ------------------------------------------------------------------------
@@ -45,3 +48,14 @@ test_singleton :: Assertion
 test_singleton = do
     singleton "k" 'a'        @?= fromList [("k", 'a')]
     size (singleton "k" 'a') @?= 1
+
+----------------------------------------------------------------
+-- QuickCheck
+----------------------------------------------------------------
+
+prop_singleton :: Key -> Key -> Bool
+prop_singleton k x = insert k x empty == singleton k x
+
+prop_map ::  (Int -> Int) -> [(Key, Int)] -> Bool
+prop_map f l = ((toList.(map f).fromList) l) == (((Data.Map.toList).(Data.Map.map f).(Data.Map.fromList)) l) -- if this fails, you may have to sort the list
+
