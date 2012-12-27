@@ -14,3 +14,5 @@ OTHER_FILES += Data/StringMap/Base.hs
 OTHER_FILES += Data/StringMap.hs
 OTHER_FILES += Setup.hs
 
+OTHER_FILES += tests/stringmap-properties.hs
+
