@@ -38,7 +38,7 @@
 
 -- ----------------------------------------------------------------------------
 
-module Data.StringMap.Core
+module Data.StringMap.Base
 where
 
 import           Prelude        hiding ( succ, lookup, map, mapM, null )
@@ -823,7 +823,7 @@ subForest                       :: (Key -> Key) -> StringMap v -> [(Key -> Key, 
 subForest kf (Branch c s n)     = (kf . (c:), s) : subForest kf (norm n)
 subForest _  Empty              = []
 subForest kf (Val _ t)          = subForest kf (norm t)
-subForest _  _                  = error "StringMap.Core.subForest: Pattern match failure"
+subForest _  _                  = error "StringMap.Base.subForest: Pattern match failure"
  
 -- ----------------------------------------
 

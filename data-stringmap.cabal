@@ -29,9 +29,9 @@ Library
 
     exposed-modules:
         Data.StringMap
-        Data.StringMap.FuzzySearch
         Data.StringMap.PrefixSet
+        Data.StringMap.Types
 
     other-modules:
         Data.StringMap.Base
-        Data.StringMap.Types
+        Data.StringMap.FuzzySearch

@@ -22,7 +22,7 @@ where
 
 import           Data.Char
 
-import           Data.StringMap.Core
+import           Data.StringMap.Base
 import           Data.StringMap.PrefixSet
 import           Data.StringMap.Types
 

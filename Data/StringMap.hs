@@ -18,9 +18,15 @@
 -- ----------------------------------------------------------------------------
 
 module Data.StringMap
-    ( StringMap (..)
+    (
+    -- * Map type
+    StringMap -- (..) I don't think we should export the constructor.
     , Key
+
+    -- * Operators
     , (!)
+
+    -- * Query
     , value
     , valueWithDefault
     , null
@@ -31,36 +37,62 @@ module Data.StringMap
     , prefixFind
     , prefixFindWithKey
     , prefixFindWithKeyBF
+
+    -- * Construction
     , empty
     , singleton
+
+    -- ** Insertion
     , insert
     , insertWith
     , insertWithKey
+
+    -- ** Delete\/Update
     , delete
     , update
     , updateWithKey
+
+    -- * Combine
+    -- ** Union
+    , union
+    , unionWith
+    , unionWithKey
+
+    -- ** Difference
+    , difference
+    , differenceWith
+    , differenceWithKey
+
+
+    -- * Traversal
+    -- ** Map
     , map
     , mapWithKey
     , mapM
     , mapWithKeyM
+
+    -- * Folds
     , fold
     , foldWithKey
-    , union
-    , unionWith
-    , unionWithKey
-    , difference
-    , differenceWith
-    , differenceWithKey
+
+    -- * Conversion
     , keys
     , elems
-    , toList
+
+    -- ** Lists
     , fromList
+    , toList
     , toListBF
-    , toMap
+
+    -- ** Maps
     , fromMap
+    , toMap
+
+    -- * Debugging
     , space
     , keyChars
 
+    -- * Prefix and Fuzzy Search
     , prefixFindCaseWithKey     -- fuzzy search
     , prefixFindNoCaseWithKey
     , prefixFindNoCase
