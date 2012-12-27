@@ -5,3 +5,4 @@ cabal-dev
 *.chi
 *.chs.h
 StringMap.pro.user
+.directory
