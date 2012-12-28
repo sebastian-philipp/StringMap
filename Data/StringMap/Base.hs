@@ -225,6 +225,7 @@ singleton k v           = foldr (\ c r -> branch c r empty) (val v empty) $ k --
 {-# INLINE singleton #-}
 
 -- | /O(1)/ Extract the value of a node (if there is one)
+-- TODO: INTERNAL
 
 value                   :: Monad m => StringMap a -> m a
 value t                 = case norm t of
