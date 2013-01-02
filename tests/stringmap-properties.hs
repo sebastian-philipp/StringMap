@@ -1,5 +1,6 @@
 import Data.StringMap
 
+
 --import Data.Monoid
 --import Data.Maybe hiding (mapMaybe)
 --import qualified Data.Maybe as Maybe (mapMaybe)
@@ -8,6 +9,7 @@ import Data.StringMap
 import Prelude hiding (lookup, null, map, filter, foldr, foldl)
 import qualified Prelude (map)
 import qualified Data.Map as Data.Map
+import qualified Data.Set as Set (Set, fromList)
 
 --import Data.List (nub,sort)
 --import qualified Data.List as List
@@ -18,6 +20,7 @@ import Test.Framework.Providers.QuickCheck2
 import Test.HUnit hiding (Test, Testable)
 import Test.QuickCheck
 import Text.Show.Functions ()
+
 
 default (Int)
 
@@ -31,18 +34,18 @@ main = defaultMain
 		  , testCase "size" test_size
 		  , testCase "member" test_member
 		  , testCase "lookup" test_lookup
-		 -- , testCase "findWithDefault" test_findWithDefault
-		 -- , testCase "prefixFind" test_prefixFind
-		 -- , testCase "prefixFindWithKey" test_prefixFindWithKey
-		 -- , testCase "prefixFindWithKeyBF" test_prefixFindWithKeyBF
-		 , testCase "empty" test_empty
-		 , testCase "singleton" test_singleton
-		 -- , testCase "insert" test_insert
-		 -- , testCase "insertWith" test_insertWith
-		 -- , testCase "insertWithKey" test_insertWithKey
-		 -- , testCase "delete" test_delete
-		 -- , testCase "update" test_update
-		 -- , testCase "updateWithKey" test_updateWithKey
+		  , testCase "findWithDefault" test_findWithDefault
+		  , testCase "prefixFind" test_prefixFind
+		  , testCase "prefixFindWithKey" test_prefixFindWithKey
+		  , testCase "prefixFindWithKeyBF" test_prefixFindWithKeyBF
+		  , testCase "empty" test_empty
+		  , testCase "singleton" test_singleton
+		  , testCase "insert" test_insert
+		  , testCase "insertWith" test_insertWith
+		  , testCase "insertWithKey" test_insertWithKey
+		  , testCase "delete" test_delete
+		  , testCase "update" test_update
+		  , testCase "updateWithKey" test_updateWithKey
 		 -- , testCase "union" test_union
 		 -- , testCase "unionWith" test_unionWith
 		 -- , testCase "unionWithKey" test_unionWithKey
@@ -80,6 +83,9 @@ type UMap = StringMap ()
 type IMap = StringMap Int
 type SMap = StringMap String
 
+cmpset :: (Eq a, Show a, Ord a) => [a] -> [a] -> Assertion
+cmpset l r = (Set.fromList l) @?= (Set.fromList r)
+
 ----------------------------------------------------------------
 -- Unit tests
 ----------------------------------------------------------------
@@ -91,7 +97,7 @@ test_exclamation = undefined
 test_value :: Assertion
 test_value = let m = fromList [("a",1), ("b", 2)] in do
 				value m @?= Nothing
-				fail "TODO. How does 'value' this work?"
+				error "TODO. How does 'value' this work?"
 
 
 test_valueWithDefault :: Assertion
@@ -121,45 +127,85 @@ test_lookup = do
 				lookup "" (empty :: UMap) @?= Nothing
 
 test_findWithDefault :: Assertion
-test_findWithDefault = undefined
+test_findWithDefault = do
+				findWithDefault 7 "ab" (fromList [("a",1), ("ab", 2)]) @?= 2
+				findWithDefault 7 "aba" (fromList [("a",1), ("ab", 2)]) @?= 7
+				findWithDefault 7 "" (empty :: IMap) @?= 7
 
 test_prefixFind :: Assertion
-test_prefixFind = undefined
+test_prefixFind = do
+				prefixFind "a" (fromList [("a",1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]) `cmpset` [1, 2, 4]
+				prefixFind "" (fromList [("a",1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]) `cmpset` [1, 2, 3, 4, 5]
+				prefixFind "foo" (fromList [("a",1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]) @?= []
+				prefixFind "" (empty :: UMap) @?= []
 
 test_prefixFindWithKey :: Assertion
-test_prefixFindWithKey = undefined
+test_prefixFindWithKey = do
+				prefixFindWithKey "a" (fromList [("a",1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]) `cmpset`  [("a",1), ("ab", 2), ("aaa", 4)]
+				prefixFindWithKey "" (fromList [("a",1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]) `cmpset`  [("a",1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]
+				prefixFindWithKey "foo" (fromList [("a",1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]) @?= []
+				prefixFindWithKey "" (empty :: UMap) @?= []
 
 test_prefixFindWithKeyBF :: Assertion
-test_prefixFindWithKeyBF = undefined
+test_prefixFindWithKeyBF = do
+				prefixFindWithKey "a" (fromList [("a",1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]) @?= [("a",1), ("ab", 2), ("aaa", 4)]
+				prefixFindWithKey "" (fromList [("a",1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]) @?=  [("a",1), ("b", 5), ("ab", 2), ("cab", 3), ("aaa", 4)]
+				prefixFindWithKey "foo" (fromList [("a",1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]) @?= []
+				prefixFindWithKey "" (empty :: UMap) @?= []
 
 test_empty :: Assertion
 test_empty = do
-	(empty :: UMap)  @?= fromList []
-	size empty @?= 0
+				(empty :: UMap)  @?= fromList []
+				size empty @?= 0
 
 
 test_singleton :: Assertion
 test_singleton = do
-	singleton "k" 'a'        @?= fromList [("k", 'a')]
-	size (singleton "k" 'a') @?= 1
+				singleton "k" 'a'        @?= fromList [("k", 'a')]
+				size (singleton "k" 'a') @?= 1
 
 test_insert :: Assertion
-test_insert = undefined
+test_insert = do
+				insert "5" 'x' (fromList [("5",'a'), ("3",'b')]) @?= fromList [("3", 'b'), ("5", 'x')]
+				insert "7" 'x' (fromList [("5",'a'), ("3",'b')]) @?= fromList [("3", 'b'), ("5", 'a'), ("7", 'x')]
+				insert "5" 'x' empty                         @?= singleton "5" 'x'
 
 test_insertWith :: Assertion
-test_insertWith = undefined
+test_insertWith = do
+				insertWith (++) "5" "xxx" (fromList [("5","a"), ("3","b")]) @?= fromList [("3", "b"), ("5", "xxxa")]
+				insertWith (++) "7" "xxx" (fromList [("5","a"), ("3","b")]) @?= fromList [("3", "b"), ("5", "a"), ("7", "xxx")]
+				insertWith (++) "5" "xxx" empty                         @?= singleton "5" "xxx"
 
 test_insertWithKey :: Assertion
-test_insertWithKey = undefined
+test_insertWithKey = do
+				insertWithKey f "5" "xxx" (fromList [("5","a"), ("3","b")]) @?= fromList [("3", "b"), ("5", "5:xxx|a")]
+				insertWithKey f "7" "xxx" (fromList [("5","a"), ("3","b")]) @?= fromList [("3", "b"), ("5", "a"), ("7", "xxx")]
+				insertWithKey f "5" "xxx" empty                         @?= singleton "5" "xxx"
+				where
+				  f key new_value old_value = key ++ ":" ++ new_value ++ "|" ++ old_value
 
 test_delete :: Assertion
-test_delete = undefined
+test_delete = do
+				delete "a" (fromList [("a",1), ("ab", 2)]) @?= fromList [("ab", 2)]
+				delete "ab" (fromList [("a",1), ("ab", 2)]) @?= fromList [("a", 1)]
+				delete "ab" (empty :: IMap) @?= empty
 
 test_update :: Assertion
-test_update = undefined
+test_update = do
+				update f "a" (fromList [("a",1), ("ab", 2)]) @?= fromList [("a",777), ("ab", 2)]
+				update f "a" (fromList [("a",4), ("ab", 2)]) @?= fromList [("ab", 2)]
+				update f "a" (empty :: IMap) @?= empty
+				where
+					f 1 = Just 777
+					f _ = Nothing
 
 test_updateWithKey :: Assertion
-test_updateWithKey = undefined
+test_updateWithKey = do
+updateWithKey f "a" (fromList [("a","a"), ("ab","b")]) @?= fromList [("ab", "b"), ("a", "a:new a")]
+updateWithKey f "c" (fromList [("","a"), ("ab","b")]) @?= fromList [("ab", "b"), ("", "a")]
+updateWithKey f "ab" (fromList [("","a"), ("ab","b")]) @?= singleton "" "a"
+where
+ f k x = if x == "a" then Just ((k) ++ ":new a") else Nothing
 
 test_union :: Assertion
 test_union = undefined
@@ -253,5 +299,5 @@ prop_singleton :: Key -> Key -> Bool
 prop_singleton k x = insert k x empty == singleton k x
 
 prop_map ::  (Int -> Int) -> [(Key, Int)] -> Bool
-prop_map f l = ((toList.(map f).fromList) l) == (((Data.Map.toList).(Data.Map.map f).(Data.Map.fromList)) l) -- if this fails, you may have to sort the list
+prop_map f l = ((Set.fromList).toListBF.(map f).fromList) l == ((Set.fromList).(Data.Map.toList).(Data.Map.map f).(Data.Map.fromList)) l
 
