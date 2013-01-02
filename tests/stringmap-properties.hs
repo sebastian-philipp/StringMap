@@ -10,6 +10,7 @@ import Prelude hiding (lookup, null, map, filter, foldr, foldl)
 import qualified Prelude (map)
 import qualified Data.Map as Data.Map
 import qualified Data.Set as Set (Set, fromList)
+import qualified Data.Char as Char (intToDigit)
 
 --import Data.List (nub,sort)
 --import qualified Data.List as List
@@ -46,20 +47,20 @@ main = defaultMain
 		  , testCase "delete" test_delete
 		  , testCase "update" test_update
 		  , testCase "updateWithKey" test_updateWithKey
-		 -- , testCase "union" test_union
-		 -- , testCase "unionWith" test_unionWith
-		 -- , testCase "unionWithKey" test_unionWithKey
-		 -- , testCase "difference" test_difference
-		 -- , testCase "differenceWith" test_differenceWith
-		 -- , testCase "differenceWithKey" test_differenceWithKey
-		 -- , testCase "map" test_map
-		 -- , testCase "mapWithKey" test_mapWithKey
+		  , testCase "union" test_union
+		  , testCase "unionWith" test_unionWith
+		  , testCase "unionWithKey" test_unionWithKey
+		  , testCase "difference" test_difference
+		  , testCase "differenceWith" test_differenceWith
+		  , testCase "differenceWithKey" test_differenceWithKey
+		  , testCase "map" test_map
+		  , testCase "mapWithKey" test_mapWithKey
 		 -- , testCase "mapM" test_mapM
 		 -- , testCase "mapWithKeyM" test_mapWithKeyM
-		 -- , testCase "fold" test_fold
-		 -- , testCase "foldWithKey" test_foldWithKey
-		 -- , testCase "keys" test_keys
-		 -- , testCase "elems" test_elems
+		  , testCase "fold" test_fold
+		  , testCase "foldWithKey" test_foldWithKey
+		  , testCase "keys" test_keys
+		  , testCase "elems" test_elems
 		 -- , testCase "fromList" test_fromList
 		 -- , testCase "toList" test_toList
 		 -- , testCase "toListBF" test_toListBF
@@ -86,6 +87,8 @@ type SMap = StringMap String
 cmpset :: (Eq a, Show a, Ord a) => [a] -> [a] -> Assertion
 cmpset l r = (Set.fromList l) @?= (Set.fromList r)
 
+mergeString key l r = key ++ ":" ++ l ++ "|" ++ r
+
 ----------------------------------------------------------------
 -- Unit tests
 ----------------------------------------------------------------
@@ -97,7 +100,7 @@ test_exclamation = undefined
 test_value :: Assertion
 test_value = let m = fromList [("a",1), ("b", 2)] in do
 				value m @?= Nothing
-				error "TODO. How does 'value' this work?"
+				error "TODO. How does 'value' work?"
 
 
 test_valueWithDefault :: Assertion
@@ -178,11 +181,9 @@ test_insertWith = do
 
 test_insertWithKey :: Assertion
 test_insertWithKey = do
-				insertWithKey f "5" "xxx" (fromList [("5","a"), ("3","b")]) @?= fromList [("3", "b"), ("5", "5:xxx|a")]
-				insertWithKey f "7" "xxx" (fromList [("5","a"), ("3","b")]) @?= fromList [("3", "b"), ("5", "a"), ("7", "xxx")]
-				insertWithKey f "5" "xxx" empty                         @?= singleton "5" "xxx"
-				where
-				  f key new_value old_value = key ++ ":" ++ new_value ++ "|" ++ old_value
+				insertWithKey mergeString "5" "xxx" (fromList [("5","a"), ("3","b")]) @?= fromList [("3", "b"), ("5", "5:xxx|a")]
+				insertWithKey mergeString "7" "xxx" (fromList [("5","a"), ("3","b")]) @?= fromList [("3", "b"), ("5", "a"), ("7", "xxx")]
+				insertWithKey mergeString "5" "xxx" empty                         @?= singleton "5" "xxx"
 
 test_delete :: Assertion
 test_delete = do
@@ -201,35 +202,44 @@ test_update = do
 
 test_updateWithKey :: Assertion
 test_updateWithKey = do
-updateWithKey f "a" (fromList [("a","a"), ("ab","b")]) @?= fromList [("ab", "b"), ("a", "a:new a")]
-updateWithKey f "c" (fromList [("","a"), ("ab","b")]) @?= fromList [("ab", "b"), ("", "a")]
-updateWithKey f "ab" (fromList [("","a"), ("ab","b")]) @?= singleton "" "a"
-where
- f k x = if x == "a" then Just ((k) ++ ":new a") else Nothing
+				updateWithKey f "a" (fromList [("a","a"), ("ab","b")]) @?= fromList [("ab", "b"), ("a", "a:new a")]
+				updateWithKey f "c" (fromList [("","a"), ("ab","b")]) @?= fromList [("ab", "b"), ("", "a")]
+				updateWithKey f "ab" (fromList [("","a"), ("ab","b")]) @?= singleton "" "a"
+				where
+				 f k x = if x == "a" then Just ((k) ++ ":new a") else Nothing
 
 test_union :: Assertion
-test_union = undefined
+test_union = do
+	union (fromList [("a", 1), ("ab", 3)]) (fromList [("a", 2), ("c", 4)]) @?= fromList [("a", 1), ("ab", 3), ("c", 4)]
+	union empty (fromList [("a", 2), ("c", 4)]) @?= fromList [("a", 2), ("c", 4)]
 
 test_unionWith :: Assertion
-test_unionWith = undefined
+test_unionWith = do
+	unionWith (+) (fromList [("a", 1), ("ab", 3)]) (fromList [("a", 2), ("c", 4)]) @?= fromList [("a", 3), ("ab", 3), ("c", 4)]
+	unionWith (+) empty (fromList [("a", 2), ("c", 4)]) @?= fromList [("a", 2), ("c", 4)]
+
 
 test_unionWithKey :: Assertion
-test_unionWithKey = undefined
+test_unionWithKey = unionWithKey mergeString (fromList [("a", "a"), ("ab", "b")]) (fromList [("a", "A"), ("c", "C")]) @?= fromList [("ab", "b"), ("a", "a:a|A"), ("c", "C")]
 
 test_difference :: Assertion
-test_difference = undefined
+test_difference = difference (fromList [("a", "a"), ("ab", "b")]) (fromList [("a", "A"), ("c", "C")]) @?= (singleton "ab" "b")
 
 test_differenceWith :: Assertion
-test_differenceWith = undefined
+test_differenceWith = differenceWith f (fromList [("a", "a"), ("ab", "b")]) (fromList [("a", "A"), ("ab", "B"), ("c", "C")]) @?= singleton "ab" "b:B"
+	where
+	f al ar = if al== "b" then Just (al ++ ":" ++ ar) else Nothing
 
 test_differenceWithKey :: Assertion
-test_differenceWithKey = undefined
+test_differenceWithKey = differenceWithKey f (fromList [("a", "a"), ("ab", "b")]) (fromList [("a", "A"), ("ab", "B"), ("c", "C")]) @?= singleton "ab" "ab:b|B"
+	where
+	f k al ar = if al == "b" then Just (mergeString k al ar) else Nothing
 
 test_map :: Assertion
-test_map = undefined
+test_map = map (* 10) (fromList [("a",1), ("ab",2)]) @?= fromList [("a", 10), ("ab", 20)]
 
 test_mapWithKey :: Assertion
-test_mapWithKey = undefined
+test_mapWithKey = mapWithKey (mergeString "") (fromList [("a","A"), ("ab","B")]) @?= fromList [("ab", ":a|B"), ("a", ":a|A")]
 
 test_mapM :: Assertion
 test_mapM = undefined
@@ -238,16 +248,22 @@ test_mapWithKeyM :: Assertion
 test_mapWithKeyM = undefined
 
 test_fold :: Assertion
-test_fold = undefined
+test_fold = do
+	fold (\ l r -> [Char.intToDigit $ fromIntegral l] ++ r) "0" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6)]) @?= "45260"
+	error "In Which Order?"
 
 test_foldWithKey :: Assertion
-test_foldWithKey = undefined
+test_foldWithKey = do
+	foldWithKey f "0" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6)]) @?= "a:4|aa:5|ab:2|b:6|0"
+	error "In Which Order?"
+	where
+	f k l r = mergeString k [Char.intToDigit $ fromIntegral l] r
 
 test_keys :: Assertion
-test_keys = undefined
+test_keys = keys (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6)]) @?= ["a", "aa", "ab", "b"]
 
 test_elems :: Assertion
-test_elems = undefined
+test_elems = elems (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6)]) @?= [4, 5, 2, 6]
 
 test_fromList :: Assertion
 test_fromList = undefined
