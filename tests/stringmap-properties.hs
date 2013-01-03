@@ -157,10 +157,10 @@ test_prefixFindWithKey = do
 
 test_prefixFindWithKeyBF :: Assertion
 test_prefixFindWithKeyBF = do
-				prefixFindWithKey "a" (fromList [("a",1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]) @?= [("a",1), ("ab", 2), ("aaa", 4)]
-				prefixFindWithKey "" (fromList [("a",1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]) @?=  [("a",1), ("b", 5), ("ab", 2), ("cab", 3), ("aaa", 4)]
-				prefixFindWithKey "foo" (fromList [("a",1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]) @?= []
-				prefixFindWithKey "" (empty :: UMap) @?= []
+				prefixFindWithKeyBF "a" (fromList [("a",1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]) @?= [("a",1), ("ab", 2), ("aaa", 4)]
+				prefixFindWithKeyBF "" (fromList [("a",1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]) @?=  [("a",1), ("b", 5), ("ab", 2), ("aaa", 4), ("cab", 3)]
+				prefixFindWithKeyBF "foo" (fromList [("a",1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]) @?= []
+				prefixFindWithKeyBF "" (empty :: UMap) @?= []
 
 test_empty :: Assertion
 test_empty = do
@@ -283,8 +283,9 @@ test_toList = do
 
 test_toListBF :: Assertion
 test_toListBF = do
-	(toList.fromList) [("a",4), ("ab", 2), ("aa", 5), ("b", 6)] @?= [("a",4), ("b", 6), ("aa", 5), ("ab", 2)]
-	toList (empty :: UMap) @?= []
+	(toListBF.fromList) [("a",4), ("Ab", 2)] @?= [("a",4), ("Ab", 2)]
+	(toListBF.fromList) [("a",4), ("ab", 2), ("aa", 5), ("b", 6)] @?= [("a",4), ("b", 6), ("aa", 5), ("ab", 2)]
+	toListBF (empty :: UMap) @?= []
 
 
 test_fromMap :: Assertion
@@ -329,7 +330,7 @@ test_prefixFindNoCase = do
 test_lookupNoCase :: Assertion
 test_lookupNoCase =  do
 	lookupNoCase "ab" (fromList [("a",1), ("Ab", 2)]) @?= [("Ab", 2)]
-	lookupNoCase "aba" (fromList [("a",1), ("Ab", 2)]) @?= [("Ab", 2)]
+	lookupNoCase "aB" (fromList [("a",1), ("Ab", 2)]) @?= [("Ab", 2)]
 	lookupNoCase "" (empty :: UMap) @?= []
 
 test_prefixFindCaseWithKeyBF :: Assertion
@@ -342,10 +343,10 @@ test_prefixFindCaseWithKeyBF = do
 
 test_prefixFindNoCaseWithKeyBF :: Assertion
 test_prefixFindNoCaseWithKeyBF = do
-	prefixFindNoCaseWithKey "" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= [("a",4), ("b", 6), ("Ab", 7), ("aa", 5), ("ab", 2)]
-	prefixFindNoCaseWithKey "a" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= [("a",4), ("Ab", 7), ("aa", 5), ("ab", 2)]
-	prefixFindNoCaseWithKey "b" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= [("b", 6)]
-	prefixFindNoCaseWithKey "c" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= []
+	prefixFindNoCaseWithKeyBF "" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= [("a",4), ("b", 6), ("Ab", 7), ("aa", 5), ("ab", 2)]
+	prefixFindNoCaseWithKeyBF "a" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= [("a",4), ("Ab", 7), ("aa", 5), ("ab", 2)]
+	prefixFindNoCaseWithKeyBF "b" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= [("b", 6)]
+	prefixFindNoCaseWithKeyBF "c" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= []
 
 test_lookupNoCaseBF :: Assertion
 test_lookupNoCaseBF = undefined
