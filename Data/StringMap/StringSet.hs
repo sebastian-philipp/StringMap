@@ -3,7 +3,7 @@
 -- ----------------------------------------------------------------------------
 
 {- |
-  Module     : Data.StringMap.PrefixSet
+  Module     : Data.StringMap.StringSet
   Copyright  : Copyright (C) 2010 Uwe Schmidt
   License    : MIT
 
@@ -24,7 +24,7 @@
 
 -- ----------------------------------------------------------------------------
 
-module Data.StringMap.PrefixSet
+module Data.StringMap.StringSet
 where
 
 import           Data.List              ( sort, nub )
@@ -34,45 +34,45 @@ import           Data.StringMap.Types
 -- ----------------------------------------
 
 -- | Set of strings implemented as lazy prefix tree.
--- @type PrefixSet = StringMap ()@ is not feasable because of the strict fields in the StringMap definition
+-- @type StringSet = StringMap ()@ is not feasable because of the strict fields in the StringMap definition
 
-data PrefixSet                  = PSempty
-                                | PSelem  PrefixSet
-                                | PSnext  Sym PrefixSet PrefixSet
+data StringSet                  = PSempty
+                                | PSelem  StringSet
+                                | PSnext  Sym StringSet StringSet
                                   deriving (Show)
 
-emptyPS                         :: PrefixSet
+emptyPS                         :: StringSet
 emptyPS                         = PSempty
 
-elemPS                          :: PrefixSet -> PrefixSet
+elemPS                          :: StringSet -> StringSet
 elemPS s@(PSelem _)             = s
 elemPS s                        = PSelem s
 
-elem0PS                         :: PrefixSet
+elem0PS                         :: StringSet
 elem0PS                         = elemPS emptyPS
 
-nextPS                          :: Sym -> PrefixSet -> PrefixSet -> PrefixSet
+nextPS                          :: Sym -> StringSet -> StringSet -> StringSet
 nextPS _ PSempty n              = n
 nextPS s c       n              = PSnext s c n
 
-lastPS                          :: Sym -> PrefixSet -> PrefixSet
+lastPS                          :: Sym -> StringSet -> StringSet
 lastPS s c                      = nextPS s c emptyPS
 
-nullPS                          :: PrefixSet -> Bool
+nullPS                          :: StringSet -> Bool
 nullPS PSempty                  = True
 nullPS _                        = False
 
-singlePS                        :: Key -> PrefixSet
+singlePS                        :: Key -> StringSet
 singlePS                        = foldr (\ c r -> lastPS c r)          elem0PS
 
 -- ------------------------------------------------------------
 
-prefixPS                        :: Key -> PrefixSet
+prefixPS                        :: Key -> StringSet
 prefixPS                        = foldr (\ c r -> elemPS (lastPS c r)) elem0PS
 
 -- ------------------------------------------------------------
 
-unionPS                         :: PrefixSet -> PrefixSet -> PrefixSet
+unionPS                         :: StringSet -> StringSet -> StringSet
 unionPS PSempty ps2             = ps2
 unionPS ps1     PSempty         = ps1
 
@@ -88,7 +88,7 @@ unionPS ps1@(PSnext c1 s1 n1)
 
 -- ------------------------------------------------------------
 
-foldPS                          :: (Key -> b -> b) -> b -> (Key -> Key) -> PrefixSet -> b
+foldPS                          :: (Key -> b -> b) -> b -> (Key -> Key) -> StringSet -> b
 foldPS _ r _   PSempty          = r
 foldPS f r kf (PSelem ps1)      = let r' = foldPS f r kf ps1
                                   in
@@ -97,17 +97,17 @@ foldPS f r kf (PSnext c1 s1 n1) = let r' = foldPS f r kf n1
                                   in
                                   foldPS f r' (kf . (c1:)) s1
 
-foldWithKeyPS                   :: (Key -> b -> b) -> b -> PrefixSet -> b
+foldWithKeyPS                   :: (Key -> b -> b) -> b -> StringSet -> b
 foldWithKeyPS f e               = foldPS f e id
 
 -- ------------------------------------------------------------
 
-elemsPS                         :: PrefixSet -> [Key]
+elemsPS                         :: StringSet -> [Key]
 elemsPS                         = foldWithKeyPS (:) []
 
 -- ------------------------------------------------------------
 
-fuzzyCharPS                     :: (Sym -> [Sym]) -> PrefixSet -> PrefixSet
+fuzzyCharPS                     :: (Sym -> [Sym]) -> StringSet -> StringSet
 fuzzyCharPS _  PSempty          = PSempty
 fuzzyCharPS f (PSelem ps)       = PSelem $ fuzzyCharPS f ps
 fuzzyCharPS f (PSnext c s n)    = unionPS ps1 (fuzzyCharPS f n)
@@ -118,7 +118,7 @@ fuzzyCharPS f (PSnext c s n)    = unionPS ps1 (fuzzyCharPS f n)
 
 -- ------------------------------------------------------------
 
-fuzzyCharsPS                    :: (Sym -> [Key]) -> PrefixSet -> PrefixSet
+fuzzyCharsPS                    :: (Sym -> [Key]) -> StringSet -> StringSet
 fuzzyCharsPS _  PSempty         = PSempty
 fuzzyCharsPS f (PSelem ps)      = PSelem $ fuzzyCharsPS f ps
 fuzzyCharsPS f (PSnext c s n)   = unionPS ps1 (fuzzyCharsPS f n)

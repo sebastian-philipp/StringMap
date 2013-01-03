@@ -29,7 +29,7 @@ Library
 
     exposed-modules:
         Data.StringMap
-        Data.StringMap.PrefixSet
+		Data.StringMap.StringSet
         Data.StringMap.Types
 
     other-modules:

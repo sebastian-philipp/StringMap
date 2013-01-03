@@ -1,19 +1,13 @@
 import Data.StringMap
 
 
---import Data.Monoid
---import Data.Maybe hiding (mapMaybe)
---import qualified Data.Maybe as Maybe (mapMaybe)
---import Data.Ord
---import Data.Function
 import Prelude hiding (lookup, null, map, filter, foldr, foldl)
 import qualified Prelude (map)
-import qualified Data.Map as Map
+import qualified Data.Map as Map (fromList, toList, map, empty)
 import qualified Data.Set as Set (Set, fromList)
 import qualified Data.Char as Char (intToDigit)
 import qualified Data.List as List (nubBy, length, map, (!!))
 
---import qualified Data.Set
 import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.Framework.Providers.QuickCheck2

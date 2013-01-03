@@ -54,7 +54,7 @@ import qualified Data.Map       as M
 import           Data.Maybe
 
 import           Data.StringMap.Types
-import           Data.StringMap.PrefixSet
+import           Data.StringMap.StringSet
 
 data StringMap v       = Empty
                         | Val    { value' ::   v
@@ -534,7 +534,7 @@ diff'' f kf pt1 pt2             = dif (norm pt1) (norm pt2)
 --
 -- @lookup' k' . cutPx' (singlePS k) $ t == Nothing@ for every @k'@ with @k@ not being a prefix of @k'@ 
  
-cutPx''                         :: (StringMap a -> StringMap a) -> PrefixSet -> StringMap a -> StringMap a
+cutPx''                         :: (StringMap a -> StringMap a) -> StringSet -> StringMap a -> StringMap a
 cutPx'' cf s1' t2'              = cut s1' (norm t2')
     where
     cut     PSempty           _t2               = empty
@@ -547,10 +547,10 @@ cutPx'' cf s1' t2'              = cut s1' (norm t2')
         | otherwise                             = branch c1 (cutPx'' cf s1 s2) (cutPx'' cf n1 n2)
     cut _                    _                  = normError "cutPx''"
 
-cutPx'                          :: PrefixSet -> StringMap a -> StringMap a
+cutPx'                          :: StringSet -> StringMap a -> StringMap a
 cutPx'                          = cutPx'' id
 
-cutAllPx'                       :: PrefixSet -> StringMap a -> StringMap a
+cutAllPx'                       :: StringSet -> StringMap a -> StringMap a
 cutAllPx'                       = cutPx'' (cv . norm)
     where
     cv (Val v _)                = val v empty

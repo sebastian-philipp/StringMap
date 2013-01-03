@@ -23,7 +23,7 @@ where
 import           Data.Char
 
 import           Data.StringMap.Base
-import           Data.StringMap.PrefixSet
+import           Data.StringMap.StringSet
 import           Data.StringMap.Types
 
 -- ----------------------------------------
@@ -58,24 +58,24 @@ lookupNoCaseBF k                = toListBF . cutAllPx' (noCaseKeys k)
 
 -- ----------------------------------------
 
-noCaseKeys              :: Key -> PrefixSet
+noCaseKeys              :: Key -> StringSet
 noCaseKeys              = noCasePS . singlePS
 
-noLowerCaseKeys         :: Key -> PrefixSet
+noLowerCaseKeys         :: Key -> StringSet
 noLowerCaseKeys         = noLowerCasePS . singlePS
 
 -- ----------------------------------------
 
 
-noCasePS                        :: PrefixSet -> PrefixSet
+noCasePS                        :: StringSet -> StringSet
 noCasePS                        = fuzzyCharPS (\ x -> [toUpper x, toLower x])
                                       
-noLowerCasePS                   :: PrefixSet -> PrefixSet
+noLowerCasePS                   :: StringSet -> StringSet
 noLowerCasePS                   = fuzzyCharPS (\ x -> [toUpper x, x])
 
 -- ----------------------------------------
 
-noUmlautPS                      :: PrefixSet -> PrefixSet
+noUmlautPS                      :: StringSet -> StringSet
 noUmlautPS                      = fuzzyCharsPS noUmlaut
     where
     noUmlaut '\196'             = ["Ae"]
