@@ -8,12 +8,11 @@ import Data.StringMap
 --import Data.Function
 import Prelude hiding (lookup, null, map, filter, foldr, foldl)
 import qualified Prelude (map)
-import qualified Data.Map as Data.Map
+import qualified Data.Map as Map
 import qualified Data.Set as Set (Set, fromList)
 import qualified Data.Char as Char (intToDigit)
+import qualified Data.List as List (nubBy, length, map, (!!))
 
---import Data.List (nub,sort)
---import qualified Data.List as List
 --import qualified Data.Set
 import Test.Framework
 import Test.Framework.Providers.HUnit
@@ -61,21 +60,25 @@ main = defaultMain
 		  , testCase "foldWithKey" test_foldWithKey
 		  , testCase "keys" test_keys
 		  , testCase "elems" test_elems
-		 -- , testCase "fromList" test_fromList
-		 -- , testCase "toList" test_toList
-		 -- , testCase "toListBF" test_toListBF
-		 -- , testCase "fromMap" test_fromMap
-		 -- , testCase "toMap" test_toMap
+		  , testCase "fromList" test_fromList
+		  , testCase "toList" test_toList
+		  , testCase "toListBF" test_toListBF
+		  , testCase "fromMap" test_fromMap
+		  , testCase "toMap" test_toMap
 		 -- , testCase "space" test_space
 		 -- , testCase "keyChars" test_keyChars
-		 -- , testCase "prefixFindCaseWithKey" test_prefixFindCaseWithKey     -- fuzzy search
-		 -- , testCase "prefixFindNoCaseWithKey" test_prefixFindNoCaseWithKey
-		 -- , testCase "prefixFindNoCase" test_prefixFindNoCase
-		 -- , testCase "lookupNoCase" test_lookupNoCase
-		 -- , testCase "prefixFindCaseWithKeyBF" test_prefixFindCaseWithKeyBF
-		 -- , testCase "prefixFindNoCaseWithKeyBF" test_prefixFindNoCaseWithKeyBF
-		 -- , testCase "lookupNoCaseBF" test_lookupNoCaseBF         , testProperty "insert to singleton"  prop_singleton
+		  , testCase "prefixFindCaseWithKey" test_prefixFindCaseWithKey     -- fuzzy search
+		  , testCase "prefixFindNoCaseWithKey" test_prefixFindNoCaseWithKey
+		  , testCase "prefixFindNoCase" test_prefixFindNoCase
+		  , testCase "lookupNoCase" test_lookupNoCase
+		  , testCase "prefixFindCaseWithKeyBF" test_prefixFindCaseWithKeyBF
+		  , testCase "prefixFindNoCaseWithKeyBF" test_prefixFindNoCaseWithKeyBF
+		 -- , testCase "lookupNoCaseBF" test_lookupNoCaseBF
+		 , testProperty "insert to singleton"  prop_singleton
          , testProperty "map a StringMap" prop_map
+		 , testProperty "fromList - toList" prop_fromListToList
+		 , testProperty "space" prop_space
+		 , testProperty "lookupNoCaseBF is redundant" prop_lookupNoCaseBF
          ]
 
 ------------------------------------------------------------------------
@@ -86,6 +89,9 @@ type SMap = StringMap String
 
 cmpset :: (Eq a, Show a, Ord a) => [a] -> [a] -> Assertion
 cmpset l r = (Set.fromList l) @?= (Set.fromList r)
+
+cmpset' :: (Ord a) => [a] -> [a] -> Bool
+cmpset' l r = (Set.fromList l) == (Set.fromList r)
 
 mergeString key l r = key ++ ":" ++ l ++ "|" ++ r
 
@@ -266,19 +272,32 @@ test_elems :: Assertion
 test_elems = elems (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6)]) @?= [4, 5, 2, 6]
 
 test_fromList :: Assertion
-test_fromList = undefined
+test_fromList = do
+	fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6)] @?= fromList [("b", 6), ("ab", 2), ("a",4), ("aa", 5)]
+	fromList [] @?= (empty :: UMap)
 
 test_toList :: Assertion
-test_toList = undefined
+test_toList = do
+	(toList.fromList) [("a",4), ("ab", 2), ("aa", 5), ("b", 6)] @?= [("a",4), ("aa", 5), ("ab", 2), ("b", 6)]
+	toList (empty :: UMap) @?= []
 
 test_toListBF :: Assertion
-test_toListBF = undefined
+test_toListBF = do
+	(toList.fromList) [("a",4), ("ab", 2), ("aa", 5), ("b", 6)] @?= [("a",4), ("b", 6), ("aa", 5), ("ab", 2)]
+	toList (empty :: UMap) @?= []
+
 
 test_fromMap :: Assertion
-test_fromMap = undefined
+test_fromMap = do
+	fromMap (Map.fromList [("a",4),("aa",5),("ab",2),("b",6)]) @?= fromList [("a",4),("aa",5),("ab",2),("b",6)]
+	fromMap Map.empty @?= (empty :: UMap)
+
 
 test_toMap :: Assertion
-test_toMap = undefined
+test_toMap = do
+	(toMap.fromList) [("a",4),("aa",5),("ab",2),("b",6)] @?= Map.fromList [("a",4),("aa",5),("ab",2),("b",6)]
+	toMap (empty :: UMap) @?= Map.empty
+
 
 test_space :: Assertion
 test_space = undefined
@@ -287,22 +306,46 @@ test_keyChars :: Assertion
 test_keyChars = undefined
 
 test_prefixFindCaseWithKey :: Assertion
-test_prefixFindCaseWithKey = undefined
+test_prefixFindCaseWithKey = do
+	prefixFindCaseWithKey "" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= [("Ab", 7), ("a",4), ("aa", 5), ("ab", 2), ("b", 6)]
+	prefixFindCaseWithKey "a" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= [("a",4), ("aa", 5), ("ab", 2)]
+	prefixFindCaseWithKey "b" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= [("b", 6)]
+	prefixFindCaseWithKey "c" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= []
 
 test_prefixFindNoCaseWithKey :: Assertion
-test_prefixFindNoCaseWithKey = undefined
+test_prefixFindNoCaseWithKey = do
+	prefixFindNoCaseWithKey "" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= [("Ab", 7), ("a",4), ("aa", 5), ("ab", 2), ("b", 6)]
+	prefixFindNoCaseWithKey "a" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= [("Ab", 7), ("a",4), ("aa", 5), ("ab", 2)]
+	prefixFindNoCaseWithKey "b" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= [("b", 6)]
+	prefixFindNoCaseWithKey "c" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= []
 
 test_prefixFindNoCase :: Assertion
-test_prefixFindNoCase = undefined
+test_prefixFindNoCase = do
+	prefixFindNoCase "" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6), ("aB", 7)]) @?= [4, 7, 5, 2, 6]
+	prefixFindNoCase "a" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6), ("aB", 7)]) @?= [4, 7, 5, 2]
+	prefixFindNoCase "b" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6), ("aB", 7)]) @?= [6]
+	prefixFindNoCase "c" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6), ("aB", 7)]) @?= []
 
 test_lookupNoCase :: Assertion
-test_lookupNoCase = undefined
+test_lookupNoCase =  do
+	lookupNoCase "ab" (fromList [("a",1), ("Ab", 2)]) @?= [("Ab", 2)]
+	lookupNoCase "aba" (fromList [("a",1), ("Ab", 2)]) @?= [("Ab", 2)]
+	lookupNoCase "" (empty :: UMap) @?= []
 
 test_prefixFindCaseWithKeyBF :: Assertion
-test_prefixFindCaseWithKeyBF = undefined
+test_prefixFindCaseWithKeyBF = do
+	prefixFindCaseWithKeyBF "" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= [("a",4), ("b", 6), ("Ab", 7), ("aa", 5), ("ab", 2)]
+	prefixFindCaseWithKeyBF "a" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= [("a",4), ("aa", 5), ("ab", 2)]
+	prefixFindCaseWithKeyBF "b" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= [("b", 6)]
+	prefixFindCaseWithKeyBF "c" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= []
+
 
 test_prefixFindNoCaseWithKeyBF :: Assertion
-test_prefixFindNoCaseWithKeyBF = undefined
+test_prefixFindNoCaseWithKeyBF = do
+	prefixFindNoCaseWithKey "" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= [("a",4), ("b", 6), ("Ab", 7), ("aa", 5), ("ab", 2)]
+	prefixFindNoCaseWithKey "a" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= [("a",4), ("Ab", 7), ("aa", 5), ("ab", 2)]
+	prefixFindNoCaseWithKey "b" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= [("b", 6)]
+	prefixFindNoCaseWithKey "c" (fromList [("a",4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= []
 
 test_lookupNoCaseBF :: Assertion
 test_lookupNoCaseBF = undefined
@@ -311,9 +354,28 @@ test_lookupNoCaseBF = undefined
 -- QuickCheck
 ----------------------------------------------------------------
 
+makeUnique :: [(Key, Int)] -> [(Key, Int)]
+makeUnique = List.nubBy (\ (f,_) (s,_) -> f == s)
+
 prop_singleton :: Key -> Key -> Bool
 prop_singleton k x = insert k x empty == singleton k x
 
 prop_map ::  (Int -> Int) -> [(Key, Int)] -> Bool
-prop_map f l = ((Set.fromList).toListBF.(map f).fromList) l == ((Set.fromList).(Data.Map.toList).(Data.Map.map f).(Data.Map.fromList)) l
+prop_map f l = (toListBF.(map f).fromList) l `cmpset'` ((Map.toList).(Map.map f).(Map.fromList)) l
 
+prop_fromListToList :: [(Key, Int)] -> Bool
+prop_fromListToList l = ((toList.fromList.makeUnique) l) `cmpset'` (makeUnique l)
+
+prop_space :: [(Key, Int)] -> Bool
+prop_space [] = True
+prop_space l = (space.fromList) l >= (space.fromList.tail) l
+
+prop_lookupNoCaseBF :: [(Key, Int)] -> Int -> Bool
+prop_lookupNoCaseBF [] _ = True
+prop_lookupNoCaseBF l k = (test lookupNoCaseBF) == (test lookupNoCase)
+	where
+	ul = makeUnique l
+	key :: Key
+	key = fst $ ul List.!! (k `mod` length ul)
+	test :: (Key -> StringMap Int -> [(Key, Int)]) -> [(Key, Int)]
+	test f =  f key (fromList ul)
