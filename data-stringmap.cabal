@@ -29,7 +29,9 @@ Library
 
     exposed-modules:
         Data.StringMap
-		Data.StringMap.StringSet
+        Data.StringMap.StringSet
+        Data.StringMap.Lazy
+        Data.StringMap.Strict
         Data.StringMap.Types
 
     other-modules:

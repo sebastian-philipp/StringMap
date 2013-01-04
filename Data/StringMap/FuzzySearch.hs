@@ -18,13 +18,27 @@
 -- ----------------------------------------------------------------------------
 
 module Data.StringMap.FuzzySearch
+	(
+	prefixFindCaseWithKey
+	, prefixFindNoCaseWithKey
+	, prefixFindNoCase
+	, lookupNoCase
+	, lookupNoCaseBF --redundant
+	, prefixFindCaseWithKeyBF
+	, prefixFindNoCaseWithKeyBF
+	, noCaseKeys
+	, noLowerCaseKeys
+	, noCasePS
+	, noLowerCasePS
+	, noUmlautPS
+)
 where
 
 import           Data.Char
 
 import           Data.StringMap.Base
 import           Data.StringMap.StringSet
-import           Data.StringMap.Types
+--import           Data.StringMap.Types
 
 -- ----------------------------------------
 

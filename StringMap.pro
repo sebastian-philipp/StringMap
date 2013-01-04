@@ -11,6 +11,8 @@ OTHER_FILES += Data/StringMap/StringSet.hs
 OTHER_FILES += Data/StringMap/Types.hs
 OTHER_FILES += Data/StringMap/FuzzySearch.hs
 OTHER_FILES += Data/StringMap/Base.hs
+OTHER_FILES += Data/StringMap/Lazy.hs
+OTHER_FILES += Data/StringMap/Strict.hs
 OTHER_FILES += Data/StringMap.hs
 OTHER_FILES += Setup.hs
 
