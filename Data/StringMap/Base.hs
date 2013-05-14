@@ -39,85 +39,85 @@
 -- ----------------------------------------------------------------------------
 
 module Data.StringMap.Base
-	(
-	-- * Map type
-	StringMap -- (..) I don't think we should export the constructor.
-	, Key
+        (
+        -- * Map type
+          StringMap -- (..) I don't think we should export the constructors.
+        , Key
 
-	-- * Operators
-	, (!)
+        -- * Operators
+        , (!)
 
-	-- * Query
-	, value
-	, valueWithDefault
-	, null
-	, size
-	, member
-	, lookup
-	, findWithDefault
-	, prefixFind
-	, prefixFindWithKey
-	, prefixFindWithKeyBF
+        -- * Query
+        , value
+        , valueWithDefault
+        , null
+        , size
+        , member
+        , lookup
+        , findWithDefault
+        , prefixFind
+        , prefixFindWithKey
+        , prefixFindWithKeyBF
 
-	-- * Construction
-	, empty
-	, singleton
+        -- * Construction
+        , empty
+        , singleton
 
-	-- ** Insertion
-	, insert
-	, insertWith
-	, insertWithKey
+        -- ** Insertion
+        , insert
+        , insertWith
+        , insertWithKey
 
-	-- ** Delete\/Update
-	, delete
-	, update
-	, updateWithKey
+        -- ** Delete\/Update
+        , delete
+        , update
+        , updateWithKey
 
-	-- * Combine
-	-- ** Union
-	, union
-	, unionWith
-	, unionWithKey
+        -- * Combine
+        -- ** Union
+        , union
+        , unionWith
+        , unionWithKey
 
-	-- ** Difference
-	, difference
-	, differenceWith
-	, differenceWithKey
+        -- ** Difference
+        , difference
+        , differenceWith
+        , differenceWithKey
 
 
-	-- * Traversal
-	-- ** Map
-	, map
-	, mapWithKey
-	, mapM
-	, mapWithKeyM
+        -- * Traversal
+        -- ** Map
+        , map
+        , mapWithKey
+        , mapM
+        , mapWithKeyM
 
-	-- * Folds
-	, fold
-	, foldWithKey
+        -- * Folds
+        , fold
+        , foldWithKey
 
-	-- * Conversion
-	, keys
-	, elems
+        -- * Conversion
+        , keys
+        , elems
 
-	-- ** Lists
-	, fromList
-	, toList
-	, toListBF
+        -- ** Lists
+        , fromList
+        , toList
+        , toListBF
 
-	-- ** Maps
-	, fromMap
-	, toMap
+        -- ** Maps
+        , fromMap
+        , toMap
 
-	-- * Debugging
-	, space
-	, keyChars
+        -- * Debugging
+        , space
+        , keyChars
 
-	-- Internal
-	, cutPx'
-	, cutAllPx'
+        -- Internal
+        , cutPx'
+        , cutAllPx'
 
-	)
+        )
 where
 
 import           Prelude        hiding ( succ, lookup, map, mapM, null )
@@ -153,13 +153,13 @@ data StringMap v       = Empty
                                  }
                         | Last   { sym    :: {-# UNPACK #-}
                                              ! Sym              -- the last entry in a branch list
-                                 , child  :: ! (StringMap v)   -- or no branch but a single child
+                                 , child  :: ! (StringMap v)    -- or no branch but a single child
                                  }
                         | LsSeq  { syms   :: ! Key1             -- a sequence of single childs
-                                 , child  :: ! (StringMap v)   -- in a last node
+                                 , child  :: ! (StringMap v)    -- in a last node
                                  } 
                         | BrSeq  { syms   :: ! Key1             -- a sequence of single childs
-                                 , child  :: ! (StringMap v)   -- in a branch node
+                                 , child  :: ! (StringMap v)    -- in a branch node
                                  , next   :: ! (StringMap v)
                                  } 
                         | LsSeL  { syms   :: ! Key1             -- a sequence of single childs
@@ -175,7 +175,7 @@ data StringMap v       = Empty
                                  , next   :: ! (StringMap v)
                                  }
                         | LsVal  { sym    :: {-# UNPACK #-}
-                                             ! Sym              -- a last node with a single char
+                                              ! Sym              -- a last node with a single char
                                  , value' ::   v                -- and a value
                                  }
                           deriving (Show, Eq, Ord)
@@ -221,7 +221,7 @@ val v t                         = Val v t
 {-# INLINE val #-}
 
 branch                          :: Sym -> StringMap v -> StringMap v -> StringMap v
-branch !_k  Empty        n      = n
+branch !_k Empty        n       = n
 
 branch !k (Leaf   v   ) Empty   = LsVal  k     v
 branch !k (LsVal  k1 v) Empty   = LsSeL (Cons k (Cons k1 Nil)) v
@@ -662,6 +662,8 @@ map' f k (BrVal c  v n)         = BrVal  c  (f (k []) v)             (map' f k n
 
 -- ----------------------------------------
 
+{- not yet used
+
 -- | Variant of map that works on normalized trees
 
 mapN                            :: (a -> b) -> StringMap a -> StringMap b
@@ -678,6 +680,7 @@ map'' f k                       = mapn . norm
     mapn (Val v t)              = val (f (k []) v) (map'' f k t)
     mapn (Branch c s n)         = branch c (map'' f ((c :) . k) s) (map'' f k n)
     mapn _                      = normError "map''"
+-- -}
 
 -- ----------------------------------------
 

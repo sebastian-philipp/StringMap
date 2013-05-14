@@ -19,7 +19,7 @@
 
   This feature is used in fuzzy search, when an index tree is restricted
   to a set of keys, e.g. the set of all none case significant keys
-  
+
 -}
 
 -- ----------------------------------------------------------------------------
@@ -27,14 +27,15 @@
 module Data.StringMap.StringSet
 where
 
-import           Data.List              ( sort, nub )
+import           Data.List            (nub, sort)
 
 import           Data.StringMap.Types
 
 -- ----------------------------------------
 
 -- | Set of strings implemented as lazy prefix tree.
--- @type StringSet = StringMap ()@ is not feasable because of the strict fields in the StringMap definition
+-- @type StringSet = StringMap ()@ is not feasable because of
+-- the strict fields in the StringMap definition
 
 data StringSet                  = PSempty
                                 | PSelem  StringSet

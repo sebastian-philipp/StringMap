@@ -123,6 +123,8 @@ module Data.StringMap.Lazy
     )
 where
 
-import Prelude hiding ( succ, lookup, map, mapM, null )
-import Data.StringMap.Base
-import Data.StringMap.FuzzySearch
+import           Data.StringMap.Base
+import           Data.StringMap.FuzzySearch
+import           Prelude                    hiding (lookup, map, mapM, null,
+                                             succ)
+
