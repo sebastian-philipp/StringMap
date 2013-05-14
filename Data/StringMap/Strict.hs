@@ -37,92 +37,93 @@
 -- ----------------------------------------------------------------------------
 
 module Data.StringMap.Strict
-	(
-	-- * Map type
-	StringMap -- (..) I don't think we should export the constructor.
-	, Key
+        (
+        -- * Map type
+          StringMap
+        , Key
 
-	-- * Operators
-	, (!)
+        -- * Operators
+        , (!)
 
-	-- * Query
-	, value
-	, valueWithDefault
-	, null
-	, size
-	, member
-	, lookup
-	, findWithDefault
-	, prefixFind
-	, prefixFindWithKey
-	, prefixFindWithKeyBF
+        -- * Query
+        , value
+        , valueWithDefault
+        , null
+        , size
+        , member
+        , lookup
+        , findWithDefault
+        , prefixFind
+        , prefixFindWithKey
+        , prefixFindWithKeyBF
 
-	-- * Construction
-	, empty
-	, singleton
+        -- * Construction
+        , empty
+        , singleton
 
-	-- ** Insertion
-	, insert
-	, insertWith
-	, insertWithKey
+        -- ** Insertion
+        , insert
+        , insertWith
+        , insertWithKey
 
-	-- ** Delete\/Update
-	, delete
-	, update
-	, updateWithKey
+        -- ** Delete\/Update
+        , delete
+        , update
+        , updateWithKey
 
-	-- * Combine
-	-- ** Union
-	, union
-	, unionWith
-	, unionWithKey
+        -- * Combine
+        -- ** Union
+        , union
+        , unionWith
+        , unionWithKey
 
-	-- ** Difference
-	, difference
-	, differenceWith
-	, differenceWithKey
+        -- ** Difference
+        , difference
+        , differenceWith
+        , differenceWithKey
 
 
-	-- * Traversal
-	-- ** Map
-	, map
-	, mapWithKey
-	, mapM
-	, mapWithKeyM
+        -- * Traversal
+        -- ** Map
+        , map
+        , mapWithKey
+        , mapM
+        , mapWithKeyM
 
-	-- * Folds
-	, fold
-	, foldWithKey
+        -- * Folds
+        , fold
+        , foldWithKey
 
-	-- * Conversion
-	, keys
-	, elems
+        -- * Conversion
+        , keys
+        , elems
 
-	-- ** Lists
-	, fromList
-	, toList
-	, toListBF
+        -- ** Lists
+        , fromList
+        , toList
+        , toListBF
 
-	-- ** Maps
-	, fromMap
-	, toMap
+        -- ** Maps
+        , fromMap
+        , toMap
 
-	-- * Debugging
-	, space
-	, keyChars
+        -- * Debugging
+        , space
+        , keyChars
 
-	-- * Prefix and Fuzzy Search
-	, prefixFindCaseWithKey     -- fuzzy search
-	, prefixFindNoCaseWithKey
-	, prefixFindNoCase
-	, lookupNoCase
+        -- * Prefix and Fuzzy Search
+        , prefixFindCaseWithKey     -- fuzzy search
+        , prefixFindNoCaseWithKey
+        , prefixFindNoCase
+        , lookupNoCase
 
-	, prefixFindCaseWithKeyBF
-	, prefixFindNoCaseWithKeyBF
-	, lookupNoCaseBF
-	)
+        , prefixFindCaseWithKeyBF
+        , prefixFindNoCaseWithKeyBF
+        , lookupNoCaseBF
+        )
 where
 
-import Prelude hiding ( succ, lookup, map, mapM, null )
-import Data.StringMap.Base
-import Data.StringMap.FuzzySearch
+import           Data.StringMap.Base
+import           Data.StringMap.FuzzySearch
+import           Prelude                    hiding (lookup, map, mapM, null,
+                                             succ)
