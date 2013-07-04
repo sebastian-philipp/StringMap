@@ -18,4 +18,9 @@ TODO
 Installation
 ------------
 
-TODO
+just run
+$ cabal install
+in the root directory. Everything else should be done automatically by cabal.
+
+
+

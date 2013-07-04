@@ -5,7 +5,8 @@
 # ....QtCreator did support Haskell
 # ---------------------------------------------
 
-OTHER_FILES += README.md
+OTHER_FILES += README.md \
+    benchmarks/Makefile
 OTHER_FILES += data-stringmap.cabal
 OTHER_FILES += Data/StringMap/StringSet.hs
 OTHER_FILES += Data/StringMap/Types.hs

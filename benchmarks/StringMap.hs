@@ -11,10 +11,13 @@ import qualified Data.StringMap as M
 import Data.Maybe (fromMaybe)
 import Prelude hiding (lookup)
 
+powerset :: [a] -> [[a]]
 powerset [] = [[]]
 powerset (x:xs) = powerset xs ++ map (x:) (powerset xs)
 
 main = do
+    dict <- readFile "en_US.dict"
+    let keys = lines dict
     --let m = M.fromAscList elems :: M.StringMap Int
     let m = M.fromList elems :: M.StringMap Int
     defaultMainWith
@@ -48,9 +51,8 @@ main = do
 --        , bench "fromDistinctAscList" $ whnf M.fromDistinctAscList elems
         ]
   where
-    elems = zip keys values
-    keys = powerset "abchsdhjsdfkhfsdhjkhsdklhfsklflhkasdk"
-    values = [1..2^12]
+    elems = zip keys [1..]
+    keys = powerset "abcdefghijklmnopqr"
     sum k v1 v2 = k + v1 + v2
     consPair k v xs = (k, v) : xs
 
