@@ -270,7 +270,7 @@ test_mapWithKeyM = undefined
 
 test_fold :: Assertion
 test_fold = do
-  fold (\ l r -> [Char.intToDigit $ fromIntegral l] ++ r) "0" (fromList [("a",_4), ("ab", 2), ("aa", 5), ("b", 6)]) @?= "45260"
+  fold (\ l r -> (Char.intToDigit $ fromIntegral l) : r) "0" (fromList [("a",_4), ("ab", 2), ("aa", 5), ("b", 6)]) @?= "45260"
   error "In Which Order?"
 
 test_foldWithKey :: Assertion
@@ -278,7 +278,7 @@ test_foldWithKey = do
   foldWithKey f "0" (fromList [("a",_4), ("ab", 2), ("aa", 5), ("b", 6)]) @?= "a:4|aa:5|ab:2|b:6|0"
   error "In Which Order?"
     where
-      f k l r = mergeString k [Char.intToDigit $ fromIntegral l] r
+      f k l = mergeString k [Char.intToDigit $ fromIntegral l]
 
 test_keys :: Assertion
 test_keys =

@@ -4,7 +4,8 @@ cabal-dev
 *.hi
 *.chi
 *.chs.h
-StringMap.pro.user
+StringMap.pro.user*
 .directory
 *~
 benchmarks/bench-*
+benchmarks/en_EN.dict

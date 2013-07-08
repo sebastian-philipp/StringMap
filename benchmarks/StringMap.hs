@@ -1,4 +1,4 @@
-{-# LANGUAGE BangPatterns #-}
+--{-# LANGUAGE BangPatterns #-}
 module Main where
 
 import Control.DeepSeq
@@ -87,10 +87,10 @@ data PairS a b = PS !a !b
 --                        in PS (fromMaybe 0 n' + n) m'
 
 del :: [M.Key] -> M.StringMap Int -> M.StringMap Int
-del xs m = foldl' (\m k -> M.delete k m) m xs
+del xs m = foldl' (flip M.delete) m xs
 
 upd :: [M.Key] -> M.StringMap Int -> M.StringMap Int
-upd xs m = foldl' (\m k -> M.update Just k m) m xs
+upd xs m = foldl' (flip (M.update Just)) m xs
 
 --upd' :: [Int] -> M.StringMap Int -> M.StringMap Int
 --upd' xs m = foldl' (\m k -> snd $ M.updateLookupWithKey (\_ a -> Just a) k m) m xs

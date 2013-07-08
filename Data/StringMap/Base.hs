@@ -199,8 +199,7 @@ toKey Nil               = []
 toKey (Cons c k1)       = c : toKey k1
 
 fromKey                 :: Key -> Key1
-fromKey []              = Nil
-fromKey (c:k1)          = Cons c (fromKey k1)
+fromKey k1               = foldr Cons Nil k1
 
 length1                 :: Key1 -> Int
 length1                 = length . toKey
@@ -349,7 +348,7 @@ findWithDefault v0 k            = fromMaybe v0 . lookup' k
 -- | /O(min(n,L))/ Is the key a member of the map?
 
 member                          :: Key -> StringMap a -> Bool
-member k                        = maybe False (const True) . lookup k
+member k                        = isJust . lookup k
 
 {-# INLINE member #-}
 

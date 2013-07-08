@@ -1,4 +1,4 @@
-{-# OPTIONS -XBangPatterns #-}
+{-# LANGUAGE BangPatterns #-}
 
 -- ----------------------------------------------------------------------------
 
@@ -64,7 +64,7 @@ nullPS PSempty                  = True
 nullPS _                        = False
 
 singlePS                        :: Key -> StringSet
-singlePS                        = foldr (\ c r -> lastPS c r)          elem0PS
+singlePS                        = foldr lastPS elem0PS
 
 -- ------------------------------------------------------------
 
