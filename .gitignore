@@ -1,3 +1,4 @@
+/benchmarks/en_US.dict
 dist
 cabal-dev
 *.o

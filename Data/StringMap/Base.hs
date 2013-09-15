@@ -116,6 +116,9 @@ module Data.StringMap.Base
         -- Internal
         , cutPx'
         , cutAllPx'
+        , branch
+        , val
+        , insert'
 
         )
 where
@@ -188,7 +191,10 @@ data Key1               = Nil
                         | Cons  {-# UNPACK #-}
                                 ! Sym
                                 ! Key1            
-                          deriving (Show, Eq, Ord)
+                          deriving (Eq, Ord)
+
+instance Show Key1 where
+    show k = show (toKey k)
 
 (.++.)                  :: Key1 -> Key1 -> Key1
 Nil         .++. k2     = k2

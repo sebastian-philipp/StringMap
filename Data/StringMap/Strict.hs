@@ -1,3 +1,4 @@
+{-# OPTIONS -XBangPatterns #-}
 -- ----------------------------------------------------------------------------
 
 {- |
@@ -123,7 +124,47 @@ module Data.StringMap.Strict
         )
 where
 
-import           Data.StringMap.Base
+import           Data.StringMap.Base hiding
+        (
+          singleton
+        , insert
+        , insertWith
+        , insertWithKey
+        )
 import           Data.StringMap.FuzzySearch
 import           Prelude                    hiding (lookup, map, mapM, null,
                                              succ)
+
+import Data.Strict.Tuple
+import qualified Data.List      as L
+--import Data.BitUtil
+--import Data.StrictPair
+
+-- | /O(1)/ Create a map with a single element.
+
+singleton               :: Key -> a -> StringMap a
+singleton !k v           = L.foldr (\ c r -> branch c r empty) (val v empty) $ k -- siseq k (val v empty)
+
+{-# INLINE singleton #-}
+
+-- | /O(min(n,L))/ Insert a new key and value into the map. If the key is already present in
+-- the map, the associated value will be replaced with the new value.
+
+insert                          :: Key -> a -> StringMap a -> StringMap a
+insert !k !v                    = insertWith const k v
+
+{-# INLINE insert #-}
+
+-- | /O(min(n,L))/ Insert with a combining function. If the key is already present in the map,
+-- the value of @f new_value old_value@ will be inserted.
+
+insertWith                      :: (a -> a -> a) -> Key -> a -> StringMap a -> StringMap a
+insertWith f !k v t              = insert' f v k t
+
+{-# INLINE insertWith #-}
+
+-- | /O(min(n,L))/ Insert with a combining function. If the key is already present in the map,
+-- the value of @f key new_value old_value@ will be inserted.
+
+insertWithKey                   :: (Key -> a -> a -> a) -> Key -> a -> StringMap a -> StringMap a
+insertWithKey f !k               = insertWith (f k) k

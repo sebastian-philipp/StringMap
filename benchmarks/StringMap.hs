@@ -7,7 +7,7 @@ import Control.Monad.Trans (liftIO)
 import Criterion.Config
 import Criterion.Main
 import Data.List (foldl')
-import qualified Data.StringMap as M
+import qualified Data.StringMap.Strict as M
 import Data.Maybe (fromMaybe)
 import Prelude hiding (lookup)
 
@@ -17,9 +17,9 @@ powerset (x:xs) = powerset xs ++ map (x:) (powerset xs)
 
 main = do
     dict <- readFile "en_US.dict"
-    let keys = lines dict
-    --let m = M.fromAscList elems :: M.StringMap Int
-    let m = M.fromList elems :: M.StringMap Int
+    keys <- return $ lines dict
+    elems <- return $ zip keys [1..]
+    m <- return $ (M.fromList elems :: M.StringMap Int)
     defaultMainWith
         defaultConfig
         (liftIO . evaluate $ rnf [m])
@@ -51,8 +51,6 @@ main = do
 --        , bench "fromDistinctAscList" $ whnf M.fromDistinctAscList elems
         ]
   where
-    elems = zip keys [1..]
-    keys = powerset "abcdefghijklmnopqr"
     sum k v1 v2 = k + v1 + v2
     consPair k v xs = (k, v) : xs
 
