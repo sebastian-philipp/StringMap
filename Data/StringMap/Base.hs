@@ -20,7 +20,7 @@
 
   Most other function names clash with "Prelude" names, therefore this module is usually
   imported @qualified@, e.g.
-  
+
   > import Data.StringMap (StringMap)
   > import qualified Data.StringMap as T
 
@@ -29,11 +29,11 @@
   key (the number of bytes in the list). The functions for searching a prefix have a worst-case
   complexity of /O(max(L,R))/. This means that the operation can become linear with
   /R/, the number of elements found for the prefix, with a minimum of /L/.
-  
+
   The module exports include the internal data types, their constructors and access
-  functions for ultimate flexibility. Derived modules should not export these 
+  functions for ultimate flexibility. Derived modules should not export these
   (as shown in "Holumbus.Data.StrMap") to provide only a restricted interface.
-  
+
 -}
 
 -- ----------------------------------------------------------------------------
@@ -41,7 +41,7 @@
 module Data.StringMap.Base
         (
         -- * Map type
-          StringMap -- (..) I don't think we should export the constructors.
+          StringMap (Empty, Val, Branch)-- (..) I don't think we should export the constructors.
         , Key
 
         -- * Operators
@@ -118,8 +118,8 @@ module Data.StringMap.Base
         , cutAllPx'
         , branch
         , val
-        , insert'
-
+        , norm
+        , normError
         )
 where
 

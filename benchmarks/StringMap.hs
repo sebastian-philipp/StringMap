@@ -76,7 +76,7 @@ insWithKey xs m = foldl' (\m (k, v) -> M.insertWithKey add3 k v m) m xs
 --insWithKey' :: [(Int, Int)] -> M.StringMap Int -> M.StringMap Int
 --insWithKey' xs m = foldl' (\m (k, v) -> M.insertWithKey' add3 k v m) m xs
 
-data PairS a b = PS !a !b
+--data PairS a b = PS !a !b
 
 --insLookupWithKey :: [(Int, Int)] -> M.StringMap Int -> (Int, M.StringMap Int)
 --insLookupWithKey xs m = let !(PS a b) = foldl' f (PS 0 m) xs in (a, b)

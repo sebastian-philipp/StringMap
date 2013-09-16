@@ -130,12 +130,13 @@ import           Data.StringMap.Base hiding
         , insert
         , insertWith
         , insertWithKey
+        , fromList
         )
 import           Data.StringMap.FuzzySearch
 import           Prelude                    hiding (lookup, map, mapM, null,
                                              succ)
 
-import Data.Strict.Tuple
+--import Data.Strict.Tuple
 import qualified Data.List      as L
 --import Data.BitUtil
 --import Data.StrictPair
@@ -168,3 +169,30 @@ insertWith f !k v t              = insert' f v k t
 
 insertWithKey                   :: (Key -> a -> a -> a) -> Key -> a -> StringMap a -> StringMap a
 insertWithKey f !k               = insertWith (f k) k
+-- ----------------------------------------
+
+insert'                         :: (a -> a -> a) -> a -> Key -> StringMap a -> StringMap a
+insert' f v k0                  = ins k0 . norm
+    where
+    ins'                        = insert' f v
+
+    ins k (Branch c' s' n')
+        = case k of
+          []                    -> val v (branch c' s' n')
+          (c : k1)
+              | c <  c'         -> branch c (singleton k1 v) (branch c' s' n')
+              | c == c'         -> branch c (ins' k1 s')                   n'
+              | otherwise       -> branch c'         s'            (ins' k n')
+
+    ins k  Empty                = singleton k v
+
+    ins k (Val v' t')
+        = case k of
+          []                    -> flip val t' $! f v v'
+          _                     -> val      v'  (ins' k t')
+
+    ins _ _                     = normError "insert'"
+
+-- | /O(n)/ Creates a trie from a list of key\/value pairs.
+fromList                        :: [(Key, a)] -> StringMap a
+fromList                        = L.foldl' (\p (k, v) -> insert k v p) empty
