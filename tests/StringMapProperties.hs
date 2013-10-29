@@ -50,6 +50,7 @@ main = defaultMain
        , testCase "differenceWithKey" test_differenceWithKey
        , testCase "map" test_map
        , testCase "mapWithKey" test_mapWithKey
+       , testCase "mapMaybe" test_mapMaybe
        -- , testCase "mapM" test_mapM
        -- , testCase "mapWithKeyM" test_mapWithKeyM
        , testCase "fold" test_fold
@@ -261,6 +262,13 @@ test_map =
 test_mapWithKey :: Assertion
 test_mapWithKey =
     mapWithKey (mergeString "") (fromList [("a","A"), ("ab","B")]) @?= fromList [("ab", ":a|B"), ("a", ":a|A")]
+
+test_mapMaybe :: Assertion
+test_mapMaybe = do
+    mapMaybe (Just . (* 10)) (fromList [("a",_1), ("ab",2)]) @?= fromList [("a", 10), ("ab", 20)]
+    mapMaybe (f) (fromList [("a","A"), ("ab","B")]) @?= fromList [("a", 1::Int)]
+    where
+        f v = if v == "A" then Just 1 else Nothing
 
 test_mapM :: Assertion
 test_mapM = undefined

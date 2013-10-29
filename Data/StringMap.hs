@@ -70,6 +70,7 @@ module Data.StringMap
     , mapWithKey
     , mapM
     , mapWithKeyM
+    , mapMaybe
 
     -- * Folds
     , fold

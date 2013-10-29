@@ -90,6 +90,7 @@ module Data.StringMap.Strict
         , mapWithKey
         , mapM
         , mapWithKeyM
+        , mapMaybe
 
         -- * Folds
         , fold

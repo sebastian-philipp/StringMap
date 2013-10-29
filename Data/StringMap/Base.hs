@@ -91,6 +91,7 @@ module Data.StringMap.Base
         , mapWithKey
         , mapM
         , mapWithKeyM
+        , mapMaybe
 
         -- * Folds
         , fold
@@ -133,7 +134,7 @@ import qualified Data.Foldable
 import           Data.Binary
 import qualified Data.List      as L
 import qualified Data.Map       as M
-import           Data.Maybe
+import           Data.Maybe     hiding ( mapMaybe )
 
 import           Data.StringMap.Types
 import           Data.StringMap.StringSet
@@ -665,8 +666,23 @@ map' f k (BrSeL cs v n)         = BrSeL  cs (f (k []) v)             (map' f k n
 map' f k (LsVal c  v)           = LsVal  c  (f (k []) v)
 map' f k (BrVal c  v n)         = BrVal  c  (f (k []) v)             (map' f k n)
 
--- ----------------------------------------
+-- | /O(n)/ Updates a value or deletes the element if the result of the updating function is 'Nothing'.
 
+mapMaybe                          :: (a -> Maybe b) -> StringMap a -> StringMap b
+mapMaybe                          = mapMaybe'
+
+{-# INLINE mapMaybe #-}
+
+mapMaybe'                       :: (a -> Maybe b) -> StringMap a -> StringMap b
+mapMaybe' f                     = upd . norm
+    where
+    upd'                        = mapMaybe' f
+    upd (Branch c' s' n')       = branch c' (upd' s') (upd' n')
+    upd Empty                   = empty
+    upd (Val v' t')             = maybe t (flip val t) $ f v'
+        where t = upd' t'
+    upd _                       = normError "update'"
+-- ----------------------------------------
 {- not yet used
 
 -- | Variant of map that works on normalized trees

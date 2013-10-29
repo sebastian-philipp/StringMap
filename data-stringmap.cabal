@@ -1,9 +1,9 @@
 name:         data-stringmap
-version:      0.9
+version:      0.9.1
 license:      MIT
 license-file: LICENSE
-author:       Sebastian Philipp, Uwe Schmidt
-maintainer:   uwe@fh-wedel.de
+author:       Uwe Schmidt, Sebastian Philipp
+maintainer:   uwe@fh-wedel.de, sebastian@spawnhost.de
 bug-reports:  https://github.com/sebastian-philipp/StringMap/issues
 synopsis:     An efficient implementation of maps from strings to arbitrary values
 category:     Data Structures
@@ -25,11 +25,10 @@ source-repository head
     location: https://github.com/sebastian-philipp/StringMap.git
 
 Library
-    build-depends: base       >= 4.5,
+    build-depends: base       >= 4.5 && < 5,
                    deepseq    >= 1.2,
                    binary     >= 0.5,
-                   containers >= 0.4,
-                   strict     >= 0.3
+                   containers >= 0.4
 
     ghc-options: -O2 -Wall -fwarn-tabs -fno-warn-unused-binds
 

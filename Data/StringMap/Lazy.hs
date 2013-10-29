@@ -89,6 +89,7 @@ module Data.StringMap.Lazy
     , mapWithKey
     , mapM
     , mapWithKeyM
+    , mapMaybe
 
     -- * Folds
     , fold
