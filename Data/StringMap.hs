@@ -20,7 +20,7 @@
 module Data.StringMap
     (
     -- * Map type
-    StringMap -- (..) I don't think we should export the constructor.
+    StringMap() -- Don't export the constructors
     , Key
 
     -- * Operators

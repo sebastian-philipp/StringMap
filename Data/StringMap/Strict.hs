@@ -40,7 +40,7 @@
 module Data.StringMap.Strict
         (
         -- * Map type
-          StringMap
+          StringMap()
         , Key
 
         -- * Operators

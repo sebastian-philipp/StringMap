@@ -1,4 +1,4 @@
-{-# OPTIONS -XBangPatterns #-}
+{-# LANGUAGE BangPatterns #-}
 
 -- ----------------------------------------------------------------------------
 
@@ -310,7 +310,6 @@ singleton k v           = foldr (\ c r -> branch c r empty) (val v empty) $ k --
 {-# INLINE singleton #-}
 
 -- | /O(1)/ Extract the value of a node (if there is one)
--- TODO: INTERNAL
 
 value                   :: Monad m => StringMap a -> m a
 value t                 = case norm t of
@@ -733,7 +732,7 @@ mapM'' f k                      = mapn . norm
 --
 -- A prefix tree visitor
 
-data PrefixTreeVisitor a b      = PTV
+data StringMapVisitor a b      = PTV
     { v_empty           :: b
     , v_val             :: a    -> b -> b
     , v_branch          :: Sym  -> b -> b -> b
@@ -747,7 +746,7 @@ data PrefixTreeVisitor a b      = PTV
     , v_brval           :: Sym  -> a -> b -> b
     }
 
-visit                   :: PrefixTreeVisitor a b -> StringMap a -> b
+visit                   :: StringMapVisitor a b -> StringMap a -> b
 
 visit v (Empty)         = v_empty  v
 visit v (Val v' t)      = v_val    v v' (visit v t)

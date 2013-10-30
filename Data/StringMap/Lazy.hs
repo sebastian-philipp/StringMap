@@ -39,7 +39,7 @@
 module Data.StringMap.Lazy
     (
     -- * Map type
-    StringMap -- (..) I don't think we should export the constructor.
+    StringMap() -- (..) I don't think we should export the constructor.
     , Key
 
     -- * Operators
