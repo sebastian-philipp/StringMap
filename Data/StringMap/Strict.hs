@@ -1,4 +1,5 @@
-{-# OPTIONS -XBangPatterns #-}
+{-# LANGUAGE BangPatterns #-}
+
 -- ----------------------------------------------------------------------------
 
 {- |
@@ -125,27 +126,29 @@ module Data.StringMap.Strict
         )
 where
 
-import           Data.StringMap.Base hiding
-        (
-          singleton
-        , insert
-        , insertWith
-        , insertWithKey
-        , fromList
-        )
+import           Data.StringMap.Base        hiding (fromList, insert,
+                                             insertWith, insertWithKey,
+                                             singleton, union, unionWith)
 import           Data.StringMap.FuzzySearch
 import           Prelude                    hiding (lookup, map, mapM, null,
                                              succ)
 
 --import Data.Strict.Tuple
-import qualified Data.List      as L
+import qualified Data.List                  as L
 --import Data.BitUtil
 --import Data.StrictPair
 
 -- | /O(1)/ Create a map with a single element.
+--
+-- the attribute value is evaluated to WHNF
 
 singleton               :: Key -> a -> StringMap a
+singleton k !v          = siseq (fromKey k) (val v empty)
+
+{- OLD
+singleton               :: Key -> a -> StringMap a
 singleton !k v           = L.foldr (\ c r -> branch c r empty) (val v empty) $ k -- siseq k (val v empty)
+-}
 
 {-# INLINE singleton #-}
 
@@ -170,6 +173,7 @@ insertWith f !k v t              = insert' f v k t
 
 insertWithKey                   :: (Key -> a -> a -> a) -> Key -> a -> StringMap a -> StringMap a
 insertWithKey f !k               = insertWith (f k) k
+
 -- ----------------------------------------
 
 insert'                         :: (a -> a -> a) -> a -> Key -> StringMap a -> StringMap a
@@ -185,11 +189,11 @@ insert' f v k0                  = ins k0 . norm
               | c == c'         -> branch c (ins' k1 s')                   n'
               | otherwise       -> branch c'         s'            (ins' k n')
 
-    ins k  Empty                = singleton k v
+    ins k  Empty                = singleton k v                   -- WHNF for v is done in singleton
 
     ins k (Val v' t')
         = case k of
-          []                    -> flip val t' $! f v v'
+          []                    -> flip val t' $! f v v'          -- force WHNF of attr value
           _                     -> val      v'  (ins' k t')
 
     ins _ _                     = normError "insert'"
@@ -197,3 +201,42 @@ insert' f v k0                  = ins k0 . norm
 -- | /O(n)/ Creates a trie from a list of key\/value pairs.
 fromList                        :: [(Key, a)] -> StringMap a
 fromList                        = L.foldl' (\p (k, v) -> insert k v p) empty
+
+-- ----------------------------------------
+
+-- | /O(n+m)/ Left-biased union of two maps. It prefers the first map when duplicate keys are
+-- encountered, i.e. ('union' == 'unionWith' 'const').
+
+union                                           :: StringMap a -> StringMap a -> StringMap a
+union                                           = union' const
+
+-- | /O(n+m)/ Union with a combining function.
+
+unionWith                                       :: (a -> a -> a) -> StringMap a -> StringMap a -> StringMap a
+unionWith                                       = union'
+
+-- like union' from Base, but attr value is evaluated to WHNF
+
+union'                                          :: (a -> a -> a) -> StringMap a -> StringMap a -> StringMap a
+union' f pt1 pt2                                = uni (norm pt1) (norm pt2)
+    where
+    uni' t1' t2'                                = union' f (norm t1') (norm t2')
+
+    uni     Empty                Empty          = empty
+    uni     Empty               (Val v2 t2)     = val v2 t2
+    uni     Empty               (Branch c2 s2 n2)
+                                                = branch c2 s2 n2
+
+    uni    (Val v1 t1)           Empty          = val    v1     t1
+    uni    (Val v1 t1)          (Val v2 t2)     = flip val (uni' t1 t2) $! (f v1 v2)
+                                                  -- force attr value evaluation to WHNF
+    uni    (Val v1 t1)       t2@(Branch _ _ _)  = val    v1     (uni' t1 t2)
+
+    uni    (Branch c1 s1 n1)     Empty          = branch c1 s1 n1
+    uni t1@(Branch _  _  _ )    (Val v2 t2)     = val v2 (uni' t1 t2)
+    uni t1@(Branch c1 s1 n1) t2@(Branch c2 s2 n2)
+        | c1 <  c2                              = branch c1       s1     (uni' n1 t2)
+        | c1 >  c2                              = branch c2          s2  (uni' t1 n2)
+        | otherwise                             = branch c1 (uni' s1 s2) (uni' n1 n2)
+    uni _                    _                  = normError "union'"
+

@@ -119,25 +119,27 @@ module Data.StringMap.Base
         , cutAllPx'
         , branch
         , val
+        , siseq
+        , fromKey
         , norm
         , normError
         )
 where
 
-import           Prelude        hiding ( succ, lookup, map, mapM, null )
+import           Prelude                  hiding (lookup, map, mapM, null, succ)
 
 import           Control.Arrow
 import           Control.DeepSeq
 
-import qualified Data.Foldable
+import qualified Data.Foldable            as F
 
 import           Data.Binary
-import qualified Data.List      as L
-import qualified Data.Map       as M
-import           Data.Maybe     hiding ( mapMaybe )
+import qualified Data.List                as L
+import qualified Data.Map                 as M
+import           Data.Maybe               hiding (mapMaybe)
 
-import           Data.StringMap.Types
 import           Data.StringMap.StringSet
+import           Data.StringMap.Types
 
 data StringMap v       = Empty
                         | Val    { value' ::   v
@@ -159,20 +161,20 @@ data StringMap v       = Empty
                                              ! Sym              -- the last entry in a branch list
                                  , child  :: ! (StringMap v)    -- or no branch but a single child
                                  }
-                        | LsSeq  { syms   :: ! Key1             -- a sequence of single childs
-                                 , child  :: ! (StringMap v)    -- in a last node
-                                 } 
-                        | BrSeq  { syms   :: ! Key1             -- a sequence of single childs
-                                 , child  :: ! (StringMap v)    -- in a branch node
-                                 , next   :: ! (StringMap v)
-                                 } 
+                        | LsSeq  { syms  :: ! Key1             -- a sequence of single childs
+                                 , child :: ! (StringMap v)    -- in a last node
+                                 }
+                        | BrSeq  { syms  :: ! Key1             -- a sequence of single childs
+                                 , child :: ! (StringMap v)    -- in a branch node
+                                 , next  :: ! (StringMap v)
+                                 }
                         | LsSeL  { syms   :: ! Key1             -- a sequence of single childs
-                                 , value' ::   v                -- with a leaf 
-                                 } 
+                                 , value' ::   v                -- with a leaf
+                                 }
                         | BrSeL  { syms   :: ! Key1             -- a sequence of single childs
                                  , value' ::   v                -- with a leaf in a branch node
                                  , next   :: ! (StringMap v)
-                                 } 
+                                 }
                         | BrVal  { sym    :: {-# UNPACK #-}
                                              ! Sym              -- a branch with a single char
                                  , value' ::   v                -- and a value
@@ -191,7 +193,7 @@ data StringMap v       = Empty
 data Key1               = Nil
                         | Cons  {-# UNPACK #-}
                                 ! Sym
-                                ! Key1            
+                                ! Key1
                           deriving (Eq, Ord)
 
 instance Show Key1 where
@@ -268,9 +270,9 @@ norm                            :: StringMap v -> StringMap v
 norm (Leaf v)                   = Val v empty
 norm (Last k c)                 = Branch k c empty
 norm (LsSeq (Cons k Nil) c)     = Branch k c empty
-norm (LsSeq (Cons k ks ) c)     = Branch k (siseq ks c) empty 
+norm (LsSeq (Cons k ks ) c)     = Branch k (siseq ks c) empty
 norm (BrSeq (Cons k Nil) c n)   = Branch k c n
-norm (BrSeq (Cons k ks ) c n)   = Branch k (siseq ks c) n 
+norm (BrSeq (Cons k ks ) c n)   = Branch k (siseq ks c) n
 norm (LsSeL    ks  v)           = norm (LsSeq ks  (val v empty))
 norm (BrSeL    ks  v n)         = norm (BrSeq ks  (val v empty) n)
 norm (LsVal    k   v)           = norm (LsSeq (Cons k Nil) (val v empty))
@@ -305,7 +307,7 @@ null _                  = False
 -- | /O(1)/ Create a map with a single element.
 
 singleton               :: Key -> a -> StringMap a
-singleton k v           = foldr (\ c r -> branch c r empty) (val v empty) $ k -- siseq k (val v empty)
+singleton k v           = siseq (fromKey k) (val v empty)
 
 {-# INLINE singleton #-}
 
@@ -388,7 +390,7 @@ insertWithKey f k               = insertWith (f k) k
 
 {-# INLINE insertWithKey #-}
 
--- | /O(min(n,L))/ Updates a value at a given key (if that key is in the trie) or deletes the 
+-- | /O(min(n,L))/ Updates a value at a given key (if that key is in the trie) or deletes the
 -- element if the result of the updating function is 'Nothing'. If the key is not found, the trie
 -- is returned unchanged.
 
@@ -397,7 +399,7 @@ update                          = update'
 
 {-# INLINE update #-}
 
--- | /O(min(n,L))/ Updates a value at a given key (if that key is in the trie) or deletes the 
+-- | /O(min(n,L))/ Updates a value at a given key (if that key is in the trie) or deletes the
 -- element if the result of the updating function is 'Nothing'. If the key is not found, the trie
 -- is returned unchanged.
 
@@ -406,7 +408,7 @@ updateWithKey f k               = update' (f k) k
 
 {-# INLINE updateWithKey #-}
 
--- | /O(min(n,L))/ Delete an element from the map. If no element exists for the key, the map 
+-- | /O(min(n,L))/ Delete an element from the map. If no element exists for the key, the map
 -- remains unchanged.
 
 delete                          :: Key -> StringMap a -> StringMap a
@@ -444,7 +446,7 @@ lookup' k t
 prefixFind                      :: Key -> StringMap a -> [a]
 prefixFind k                    = elems . lookupPx' k
 
--- | /O(max(L,R))/ Find all values where the string is a prefix of the key and include the keys 
+-- | /O(max(L,R))/ Find all values where the string is a prefix of the key and include the keys
 -- in the result.
 
 prefixFindWithKey               :: Key -> StringMap a -> [(Key, a)]
@@ -499,7 +501,7 @@ update' f k0                    = upd k0 . norm
 
 -- ----------------------------------------
 
--- | /O(n+m)/ Left-biased union of two maps. It prefers the first map when duplicate keys are 
+-- | /O(n+m)/ Left-biased union of two maps. It prefers the first map when duplicate keys are
 -- encountered, i.e. ('union' == 'unionWith' 'const').
 
 union                                           :: StringMap a -> StringMap a -> StringMap a
@@ -525,7 +527,7 @@ union' f pt1 pt2                                = uni (norm pt1) (norm pt2)
     uni    (Val v1 t1)       t2@(Branch _ _ _)  = val    v1     (uni' t1 t2)
 
     uni    (Branch c1 s1 n1)     Empty          = branch c1 s1 n1
-    uni t1@(Branch _  _  _ )    (Val v2 t2)     = val v2 (uni' t1 t2) 
+    uni t1@(Branch _  _  _ )    (Val v2 t2)     = val v2 (uni' t1 t2)
     uni t1@(Branch c1 s1 n1) t2@(Branch c2 s2 n2)
         | c1 <  c2                              = branch c1       s1     (uni' n1 t2)
         | c1 >  c2                              = branch c2          s2  (uni' t1 n2)
@@ -554,7 +556,7 @@ union'' f kf pt1 pt2                            = uni (norm pt1) (norm pt2)
     uni    (Val v1 t1)       t2@(Branch _ _ _)  = val            v1     (uni' t1 t2)
 
     uni    (Branch c1 s1 n1)     Empty          = branch c1 s1 n1
-    uni t1@(Branch _  _  _ )    (Val v2 t2)     = val v2 (uni' t1 t2) 
+    uni t1@(Branch _  _  _ )    (Val v2 t2)     = val v2 (uni' t1 t2)
     uni t1@(Branch c1 s1 n1) t2@(Branch c2 s2 n2)
         | c1 <  c2                              = branch c1                         s1     (uni' n1 t2)
         | c1 >  c2                              = branch c2                            s2  (uni' t1 n2)
@@ -600,7 +602,7 @@ diff'' f kf pt1 pt2             = dif (norm pt1) (norm pt2)
     dif    (Val v1 t1)       t2@(Branch _ _ _)  =  val v1 (dif' t1 t2)
 
     dif    (Branch c1 s1 n1)     Empty          = branch c1 s1 n1
-    dif t1@(Branch _  _  _ )    (Val _  t2)     = dif' t1 t2 
+    dif t1@(Branch _  _  _ )    (Val _  t2)     = dif' t1 t2
     dif t1@(Branch c1 s1 n1) t2@(Branch c2 s2 n2)
         | c1 <  c2                              = branch c1                        s1       (dif' n1 t2)
         | c1 >  c2                              =                                            dif' t1 n2
@@ -616,8 +618,8 @@ diff'' f kf pt1 pt2             = dif (norm pt1) (norm pt2)
 --
 -- @lookup' k' . cutPx' (singlePS k) $ t == lookup' k t@ for every @k'@ with @k@ prefix of @k'@
 --
--- @lookup' k' . cutPx' (singlePS k) $ t == Nothing@ for every @k'@ with @k@ not being a prefix of @k'@ 
- 
+-- @lookup' k' . cutPx' (singlePS k) $ t == Nothing@ for every @k'@ with @k@ not being a prefix of @k'@
+
 cutPx''                         :: (StringMap a -> StringMap a) -> StringSet -> StringMap a -> StringMap a
 cutPx'' cf s1' t2'              = cut s1' (norm t2')
     where
@@ -733,17 +735,17 @@ mapM'' f k                      = mapn . norm
 -- A prefix tree visitor
 
 data StringMapVisitor a b      = PTV
-    { v_empty           :: b
-    , v_val             :: a    -> b -> b
-    , v_branch          :: Sym  -> b -> b -> b
-    , v_leaf            :: a    -> b
-    , v_last            :: Sym  -> b -> b
-    , v_lsseq           :: Key1 -> b -> b
-    , v_brseq           :: Key1 -> b -> b -> b
-    , v_lssel           :: Key1 -> a -> b
-    , v_brsel           :: Key1 -> a -> b -> b
-    , v_lsval           :: Sym  -> a -> b
-    , v_brval           :: Sym  -> a -> b -> b
+    { v_empty  :: b
+    , v_val    :: a    -> b -> b
+    , v_branch :: Sym  -> b -> b -> b
+    , v_leaf   :: a    -> b
+    , v_last   :: Sym  -> b -> b
+    , v_lsseq  :: Key1 -> b -> b
+    , v_brseq  :: Key1 -> b -> b -> b
+    , v_lssel  :: Key1 -> a -> b
+    , v_brsel  :: Key1 -> a -> b -> b
+    , v_lsval  :: Sym  -> a -> b
+    , v_brval  :: Sym  -> a -> b -> b
     }
 
 visit                   :: StringMapVisitor a b -> StringMap a -> b
@@ -904,7 +906,7 @@ keys                            = foldWithKey (\ k _v r -> k : r) []
 -- > br :: Tree a -> [a]
 -- > br t = map rootLabel $
 -- >        concat $
--- >        takeWhile (not . null) $                
+-- >        takeWhile (not . null) $
 -- >        iterate (concatMap subForest) [t]
 
 toListBF                        :: StringMap v -> [(Key, v)]
@@ -927,10 +929,10 @@ subForest kf (Branch c s n)     = (kf . (c:), s) : subForest kf (norm n)
 subForest _  Empty              = []
 subForest kf (Val _ t)          = subForest kf (norm t)
 subForest _  _                  = error "StringMap.Base.subForest: Pattern match failure"
- 
+
 -- ----------------------------------------
 
--- | /O(max(L,R))/ Find all values where the string is a prefix of the key and include the keys 
+-- | /O(max(L,R))/ Find all values where the string is a prefix of the key and include the keys
 -- in the result. The result list contains short words first
 
 prefixFindWithKeyBF             :: Key -> StringMap a -> [(Key, a)]
@@ -941,7 +943,7 @@ prefixFindWithKeyBF k           = fmap (first (k ++)) . toListBF . lookupPx' k
 instance Functor StringMap where
   fmap = map
 
-instance Data.Foldable.Foldable StringMap where
+instance F.Foldable StringMap where
   foldr = fold
 
 {- for debugging not yet enabled
