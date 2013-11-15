@@ -1,4 +1,4 @@
---{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE BangPatterns #-}
 module Main where
 
 import Control.DeepSeq

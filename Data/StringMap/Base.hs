@@ -112,6 +112,7 @@ module Data.StringMap.Base
 
         -- * Debugging
         , space
+        , stat
         , keyChars
 
         -- Internal
