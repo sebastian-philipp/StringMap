@@ -162,11 +162,11 @@ data StringMap v       = Empty
                                              ! Sym              -- the last entry in a branch list
                                  , child  :: ! (StringMap v)    -- or no branch but a single child
                                  }
-                        | LsSeq  { syms  :: ! Key1             -- a sequence of single childs
-                                 , child :: ! (StringMap v)    -- in a last node
+                        | LsSeq  { syms  :: ! Key1              -- a sequence of single childs
+                                 , child :: ! (StringMap v)     -- in a last node
                                  }
-                        | BrSeq  { syms  :: ! Key1             -- a sequence of single childs
-                                 , child :: ! (StringMap v)    -- in a branch node
+                        | BrSeq  { syms  :: ! Key1              -- a sequence of single childs
+                                 , child :: ! (StringMap v)     -- in a branch node
                                  , next  :: ! (StringMap v)
                                  }
                         | LsSeL  { syms   :: ! Key1             -- a sequence of single childs
@@ -182,37 +182,90 @@ data StringMap v       = Empty
                                  , next   :: ! (StringMap v)
                                  }
                         | LsVal  { sym    :: {-# UNPACK #-}
-                                              ! Sym              -- a last node with a single char
+                                              ! Sym             -- a last node with a single char
                                  , value' ::   v                -- and a value
                                  }
                           deriving (Show, Eq, Ord)
 
 -- | strict list of chars with unpacked fields
+-- and packing of 2 or 3 chars into a single object
 --
 -- for internal use in prefix tree to optimize space efficiency
 
 data Key1               = Nil
-                        | Cons  {-# UNPACK #-}
-                                ! Sym
-                                ! Key1
+                        | S1 {-# UNPACK #-} ! Sym
+                        | S2 {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym
+                        | S3 {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym
+                        | C1 {-# UNPACK #-} ! Sym
+                                            ! Key1
+                        | C2 {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym
+                                            ! Key1
+                        | C3 {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym
+                                            ! Key1
                           deriving (Eq, Ord)
 
 instance Show Key1 where
     show k = show (toKey k)
 
-(.++.)                  :: Key1 -> Key1 -> Key1
-Nil         .++. k2     = k2
-(Cons k k1) .++. k2     = Cons k (k1 .++. k2)
+mk1                     :: Sym -> Key1
+mk1 s1                  = S1 s1
+-- mk1 s1                  = C1 s1 Nil
+
+mk2                     :: Sym -> Sym -> Key1
+mk2 s1 s2               = S2 s1 s2
+-- mk2 s1 s2               = C1 s1 (mk1 s2)
+-- mk2 s1 s2               = C1 s1 (C1 s2 Nil)
+
+mk3                     :: Sym -> Sym -> Sym -> Key1
+mk3 s1 s2 s3            = S3 s1 s2 s3
+
+cons1                   :: Sym -> Key1 -> Key1
+cons1 s Nil             = mk1 s
+cons1 s (S1 s2)         = mk2 s s2
+cons1 s (S2 s2 s3)      = mk3 s s2 s3
+cons1 s (C1 s2 k2)      = C2 s s2 k2
+cons1 s (C2 s2 s3 k3)   = C3 s s2 s3 k3
+cons1 s k               = C1 s    k
+
+uncons1                 :: Key1 -> (Sym, Key1)
+uncons1 (S1 s)          = (s, Nil)
+uncons1 (S2 s s2)       = (s, mk1 s2)
+uncons1 (S3 s s2 s3)    = (s, mk2 s2 s3)
+uncons1 (C1 s k1)       = (s, k1)
+uncons1 (C2 s s2 k1)    = (s, C1 s2 k1)
+uncons1 (C3 s s2 s3 k1) = (s, C2 s2 s3 k1)
+uncons1 Nil             = error "uncons1 with Nil"
+
+{-# INLINE mk1 #-}
+{-# INLINE mk2 #-}
+{-# INLINE mk3 #-}
+{-# INLINE cons1 #-}
+{-# INLINE uncons1 #-}
+
 
 toKey                   :: Key1 -> Key
+toKey (C3 s1 s2 s3 k)   = s1 : s2 : s3 : toKey k
+toKey (C2 s1 s2    k)   = s1 : s2      : toKey k
+toKey (C1 s1       k)   = s1           : toKey k
+toKey (S3 s1 s2 s3)     = s1 : s2 : s3 : []
+toKey (S2 s1 s2   )     = s1 : s2      : []
+toKey (S1 s1      )     = s1           : []
 toKey Nil               = []
-toKey (Cons c k1)       = c : toKey k1
 
 fromKey                 :: Key -> Key1
-fromKey k1               = foldr Cons Nil k1
+fromKey k1               = foldr cons1 Nil k1
 
 length1                 :: Key1 -> Int
 length1                 = length . toKey
+
+space1                  :: Key1 -> Int
+space1 Nil              = 0
+space1 (S1 _)           = 2
+space1 (S2 _ _)         = 3
+space1 (S3 _ _ _)       = 4
+space1 (C1 _ k1)        = 3 + space1 k1
+space1 (C2 _ _ k1)      = 4 + space1 k1
+space1 (C3 _ _ _ k1)    = 5 + space1 k1
 
 -- ----------------------------------------
 
@@ -233,17 +286,17 @@ branch                          :: Sym -> StringMap v -> StringMap v -> StringMa
 branch !_k Empty        n       = n
 
 branch !k (Leaf   v   ) Empty   = LsVal  k     v
-branch !k (LsVal  k1 v) Empty   = LsSeL (Cons k (Cons k1 Nil)) v
-branch !k (LsSeL  ks v) Empty   = LsSeL (Cons k ks) v
-branch !k (Last   k1 c) Empty   = lsseq (Cons k (Cons k1 Nil)) c
-branch !k (LsSeq  ks c) Empty   = lsseq (Cons k ks) c
+branch !k (LsVal  k1 v) Empty   = LsSeL (mk2 k k1) v
+branch !k (LsSeL  ks v) Empty   = LsSeL (cons1 k ks) v
+branch !k (Last   k1 c) Empty   = lsseq (mk2 k k1) c
+branch !k (LsSeq  ks c) Empty   = lsseq (cons1 k ks) c
 branch !k            c  Empty   = Last k c
 
 branch !k (Leaf   v   ) n       = BrVal  k     v n
-branch !k (LsVal  k1 v) n       = BrSeL (Cons k (Cons k1 Nil)) v n
-branch !k (LsSeL  ks v) n       = BrSeL (Cons k ks) v n
-branch !k (Last   k1 c) n       = brseq (Cons k (Cons k1 Nil)) c n
-branch !k (LsSeq  ks c) n       = brseq (Cons k ks) c n
+branch !k (LsVal  k1 v) n       = BrSeL (mk2 k k1) v n
+branch !k (LsSeL  ks v) n       = BrSeL (cons1 k ks) v n
+branch !k (Last   k1 c) n       = brseq (mk2 k k1) c n
+branch !k (LsSeq  ks c) n       = brseq (cons1 k ks) c n
 branch !k            c  n       = Branch k c n
 
 lsseq                           :: Key1 -> StringMap v -> StringMap v
@@ -260,9 +313,9 @@ brseq !k c        n             = BrSeq k c n
 
 siseq                           :: Key1 -> StringMap v -> StringMap v
 siseq Nil   c                   = c
-siseq (Cons k1 Nil) c           = Last  k1 c
-siseq k    c                    = LsSeq k  c
-
+siseq k     c                   = case uncons1 k of
+                                    (k1, Nil) -> Last  k1 c
+                                    _         -> LsSeq k  c
 {-# INLINE siseq #-}
 
 -- smart selectors
@@ -270,14 +323,16 @@ siseq k    c                    = LsSeq k  c
 norm                            :: StringMap v -> StringMap v
 norm (Leaf v)                   = Val v empty
 norm (Last k c)                 = Branch k c empty
-norm (LsSeq (Cons k Nil) c)     = Branch k c empty
-norm (LsSeq (Cons k ks ) c)     = Branch k (siseq ks c) empty
-norm (BrSeq (Cons k Nil) c n)   = Branch k c n
-norm (BrSeq (Cons k ks ) c n)   = Branch k (siseq ks c) n
+norm (LsSeq k' c)               = case uncons1 k' of
+                                    (k, Nil) -> Branch k c            empty
+                                    (k, ks)  -> Branch k (siseq ks c) empty
+norm (BrSeq k' c n)             = case uncons1 k' of
+                                    (k, Nil) -> Branch k c            n
+                                    (k, ks)  -> Branch k (siseq ks c) n
 norm (LsSeL    ks  v)           = norm (LsSeq ks  (val v empty))
 norm (BrSeL    ks  v n)         = norm (BrSeq ks  (val v empty) n)
-norm (LsVal    k   v)           = norm (LsSeq (Cons k Nil) (val v empty))
-norm (BrVal    k   v n)         = norm (BrSeq (Cons k Nil) (val v empty) n)
+norm (LsVal    k   v)           = norm (LsSeq (mk1 k) (val v empty))
+norm (BrVal    k   v n)         = norm (BrSeq (mk1 k) (val v empty) n)
 norm t                          = t
 
 -- ----------------------------------------
@@ -777,16 +832,16 @@ space                   :: StringMap a -> Int
 space                   = visit $
                           PTV
                           { v_empty             = 0
-                          , v_val               = const (3+)
+                          , v_val               = const (3 +)
                           , v_branch            = const $ \ s n -> 4 + s + n
                           , v_leaf              = const 2
-                          , v_last              = const (3+)
-                          , v_lsseq             = \ cs s   -> 3 + 2 * length1 cs + s
-                          , v_brseq             = \ cs s n -> 4 + 2 * length1 cs + s + n
-                          , v_lssel             = \ cs _   -> 3 + 2 * length1 cs
-                          , v_brsel             = \ cs _ n -> 4 + 2 * length1 cs     + n
+                          , v_last              = const (3 +)
+                          , v_lsseq             = \ cs s   ->     space1 cs + s
+                          , v_brseq             = \ cs s n -> 4 + space1 cs + s + n
+                          , v_lssel             = \ cs _   -> 3 + space1 cs
+                          , v_brsel             = \ cs _ n -> 4 + space1 cs     + n
                           , v_lsval             = \ _  _   -> 3
-                          , v_brval             = \ _  _ n -> 4                     + n
+                          , v_brval             = \ _  _ n -> 4                 + n
                           }
 
 keyChars                :: StringMap a -> Int
@@ -813,19 +868,35 @@ stat                    :: StringMap a -> StringMap Int
 stat                    =  visit $
                           PTV
                           { v_empty             =             singleton "empty"  1
-                          , v_val               = \ _  t   -> singleton "val"    1 `add`  t
-                          , v_branch            = \ _  s n -> singleton "branch" 1 `add` (s `add` n)
+                          , v_val               = \ _  t   -> singleton "val"    1
+                                                              `add` t
+                          , v_branch            = \ _  s n -> singleton "branch" 1
+                                                              `add` (s `add` n)
                           , v_leaf              = \ _      -> singleton "leaf"   1
-                          , v_last              = \ _  s   -> singleton "last"   1 `add`  s
-                          , v_lsseq             = \ cs s   -> singleton ("lsseq-" ++ show (length1 cs)) 1 `add` s
-                          , v_brseq             = \ cs s n -> singleton ("brseq-" ++ show (length1 cs)) 1 `add` (s `add` n)
-                          , v_lssel             = \ cs _   -> singleton ("lssel-" ++ show (length1 cs)) 1
-                          , v_brsel             = \ cs _ n -> singleton ("brseq-" ++ show (length1 cs)) 1 `add`          n
+                          , v_last              = \ _  s   -> singleton "last"   1
+                                                              `add` s
+                          , v_lsseq             = \ cs s   -> singleton (show' "lsseq" cs) 1
+                                                              `add` singleton "size-key1" (length1 cs)
+                                                              `add` singleton "space-key1" (space1 cs)
+                                                              `add` s
+                          , v_brseq             = \ cs s n -> singleton (show' "brseq" cs) 1
+                                                              `add` singleton "size-key1" (length1 cs)
+                                                              `add` singleton "space-key1" (space1 cs)
+                                                              `add` (s `add` n)
+                          , v_lssel             = \ cs _   -> singleton (show' "lssel" cs) 1
+                                                              `add` singleton "size-key1" (length1 cs)
+                                                              `add` singleton "space-key1" (space1 cs)
+                          , v_brsel             = \ cs _ n -> singleton (show' "brseq" cs) 1
+                                                              `add` singleton "size-key1" (length1 cs)
+                                                              `add` singleton "space-key1" (space1 cs)
+                                                              `add` n
                           , v_lsval             = \ _  _   -> singleton "lsval" 1
-                          , v_brval             = \ _  _ n -> singleton "brval" 1                       `add`          n
+                          , v_brval             = \ _  _ n -> singleton "brval" 1
+                                                              `add`          n
                           }
     where
     add                 = unionWith (+)
+    show' c k1          = c ++ "-" ++ show (length1 k1)
 
 -- ----------------------------------------
 

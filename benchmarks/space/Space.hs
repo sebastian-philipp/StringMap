@@ -1,10 +1,10 @@
 module Main where
 
-import Control.Applicative ((<$>))
-import qualified Data.List as L
+import           Control.Applicative   ((<$>))
+import qualified Data.List             as L
 
-import Data.StringMap.Strict
-import Data.StringMap.Base (stat)
+import           Data.StringMap.Base   (stat)
+import           Data.StringMap.Strict
 
 type Map = StringMap Int
 
@@ -19,12 +19,23 @@ fill s
 main :: IO ()
 main =
     do m <- fill <$> readFile "en_US.dict"
-       mapM_ putStrLn $
-         [ "size  m = " ++ show (size m)
-         , "space m = " ++ show (space m)
-         , "keyChars m = " ++ show (keyChars m)
-         , "stat  m = " ++ (show . toList . stat $ m)
+       let sz = size m
+       let sp = space m
+       let kc = keyChars m
+       let ks = sum . L.map length . keys $ m
+       let st = toList . stat $ m
+       mapM_ putStrLn $ L.map unwords $
+         [ ["size     m =", show' sz, "entries"]
+         , ["space    m =", show' sp, "cells"]
+         , ["keyChars m =", show' kc, "chars used for keys"]
+         , ["keySize  m =", show' ks, "chars in all keys"]
+         , ["stat     m =", show st]
          ]
        return ()
 
+fmt :: Int -> String -> String
+fmt n
+    = reverse . take n . reverse . (replicate n ' ' ++)
 
+show' :: (Show a) => a -> String
+show' = fmt 10 . show
