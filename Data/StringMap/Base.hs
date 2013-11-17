@@ -58,6 +58,9 @@ module Data.StringMap.Base
         , prefixFind
         , prefixFindWithKey
         , prefixFindWithKeyBF
+        , lookupGE
+        , lookupLE
+        , lookupRange
 
         -- * Construction
         , empty
@@ -124,6 +127,7 @@ module Data.StringMap.Base
         , fromKey
         , norm
         , normError
+        , deepNorm
         )
 where
 
@@ -487,13 +491,53 @@ lookupPx' k0                    = look k0 . norm
 
     look _ _                    = normError "lookupPx'"
 
--- Internal lookup function which is generalised for arbitrary monads above.
+-- Internal lookup function
 
 lookup'                         :: Key -> StringMap a -> Maybe a
 lookup' k t
     = case lookupPx' k t of
       Val v _                   -> Just v
       _                         -> Nothing
+
+-- ----------------------------------------
+
+-- | remove all entries from the map with key less than the argument key
+
+lookupGE                        :: Key -> StringMap a -> StringMap a
+lookupGE k0                     = look k0 . norm
+    where
+    look [] t                   = t
+    look k@(c : k1) t@(Branch c' s' n')
+        | c <  c'               = t
+        | c == c'               = branch c' (lookupGE k1 s') n'
+        | otherwise             = lookupGE k n'
+    look _          Empty       = empty
+    look k         (Val _v' t') = lookupGE k t'
+
+    look _ _                    = normError "lookupGE"
+
+-- | remove all entries from the map with keys not having the argument key
+-- as prefix and are larger than the argument key
+
+lookupLE                        :: Key -> StringMap a -> StringMap a
+lookupLE k0                     = look k0 . norm
+    where
+    look [] t                   = t
+    look k@(c : k1) (Branch c' s' n')
+        | c <  c'               = empty
+        | c == c'               = branch c' (lookupLE k1 s') empty
+        | otherwise             = branch c' s' (lookupLE k n')
+    look _          Empty       = empty
+    look k         (Val v' t')  = val v' (lookupLE k t')
+
+    look _ _                    = normError "lookupGE"
+
+-- | Combination of 'lookupLE' and 'lookupGE'
+--
+-- the following law holds: @lookupRange key key == lookupPx' key@
+
+lookupRange                     :: Key -> Key -> StringMap a -> StringMap a
+lookupRange lb ub               = lookupLE ub . lookupGE lb
 
 -- ----------------------------------------
 
@@ -739,6 +783,7 @@ mapMaybe' f                     = upd . norm
     upd (Val v' t')             = maybe t (flip val t) $ f v'
         where t = upd' t'
     upd _                       = normError "update'"
+
 -- ----------------------------------------
 {- not yet used
 
