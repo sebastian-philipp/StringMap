@@ -1,10 +1,12 @@
+{-# LANGUAGE BangPatterns #-}
+
 module Main
 where
 import           Data.StringMap
 
 
 import qualified Data.Char                            as Char (intToDigit)
-import qualified Data.List                            as List (nubBy, (!!))
+import qualified Data.List                            as List (nubBy, (!!), map, zip)
 import qualified Data.Map                             as Map (empty, fromList,
                                                               map, toList)
 import qualified Data.Set                             as Set (fromList)
@@ -17,11 +19,14 @@ import           Test.Framework.Providers.QuickCheck2
 import           Test.HUnit                           hiding (Test, Testable)
 import           Text.Show.Functions                  ()
 
+import qualified GHC.AssertNF                         as GHC
+import Control.DeepSeq                                (deepseq)
 
 default (Int)
 
 main :: IO ()
-main = defaultMain
+main = do
+    defaultMain
        [
          -- testCase "exclamation" test_exclamation
          testCase "value" test_value
@@ -77,6 +82,7 @@ main = defaultMain
        , testProperty "space" prop_space
        , testProperty "lookupNoCaseBF is redundant" prop_lookupNoCaseBF
        ]
+    testNF
 
 ------------------------------------------------------------------------
 
@@ -405,3 +411,24 @@ prop_lookupNoCaseBF l  k = (test' lookupNoCaseBF) == (test' lookupNoCase)
       key = fst $ ul List.!! (k `mod` length ul)
       test' :: (Key -> StringMap Int -> [(Key, Int)]) -> [(Key, Int)]
       test' f =  f key (fromList ul)
+
+powerset :: [a] -> [[a]]
+powerset [] = [[]]
+powerset (!x : xs) = powerset xs ++ List.map (x:) (powerset xs)
+
+genPowerset :: String -> IO [([Char], Int)]
+genPowerset s = do
+    let ps =  List.zip (powerset s) [1::Int ..]
+    return $! deepseq ps ps
+
+testNF :: IO ()
+testNF = do
+    p1 <- genPowerset "ab"
+    p2 <- genPowerset "aa"
+    GHC.assertNFNamed "p1" $! fromList p1
+    GHC.assertNFNamed "p2" $! fromList p2
+    print $ show $ fromList p2
+    return ()
+
+
+

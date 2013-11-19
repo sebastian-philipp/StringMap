@@ -6,7 +6,8 @@
 # ---------------------------------------------
 
 OTHER_FILES += README.md \
-    benchmarks/Makefile
+    benchmarks/Makefile \
+    tests/StringMapStrict.hs
 OTHER_FILES += data-stringmap.cabal
 OTHER_FILES += Data/StringMap/StringSet.hs
 OTHER_FILES += Data/StringMap/Types.hs
