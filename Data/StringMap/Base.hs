@@ -729,6 +729,65 @@ mapM'' f k                      = mapn . norm
     mapn _                      = normError "mapM''"
 
 -- ----------------------------------------
+-- | Between
+
+between                         :: Key -> Maybe Key -> StringMap a -> StringMap a
+-- between Nothing Nothing t       = t
+between l       u       t       = betw l u $ norm t
+    where
+    between'                    = between l u
+
+
+    betw _ _ Empty              = empty
+
+    betw [] u (Val v' t')       = val v' $ between' t'
+    betw l (Nothing) (Val v' t')= val v' $ between' t'
+    betw l (Just u) (Val v' t')
+        | l > u                 = empty
+        | otherwise             = between' t'
+
+    betw _l       (Just [])  t' = empty
+    betw []       (Nothing)  t' = t'
+
+
+    betw []       (Just u'@(u:us))  (Branch s' c' n')
+        | s' < u                = branch s' c' (between' n')
+        | s' == u               = branch s' (between [] (Just us) c') (between' n')
+        | otherwise             = empty
+
+    betw l'@(l:ls) Nothing          (Branch s' c' n')
+        | s' < l                = between l' Nothing n'
+        | s' == l               = branch s' (between ls Nothing c') n'
+        | otherwise             = branch s' c' n'
+
+    betw l'@(l:ls) (Just u'@(u:us)) (Branch s' c' n')
+        | l > u                 = empty
+        | s' < l                = between l' (Just u') n'
+        | s' == l && l == u     = branch s' (between ls (Just us) c') empty
+        | s' == l               = branch s' (between ls Nothing c') (between [] (Just u') n')
+        | s' < u                = branch s' c' (between [] (Just u') n')
+        | s' == u               = branch s' (between [] (Just us) c') empty
+        | otherwise             = empty
+
+    betw _ _ _                  = normError "between"
+
+{-
+    betw k (Branch c' s' n')
+        = case k of
+          []                    -> branch c' s' n'
+          (c : k1)
+              | c <  c'         -> branch c' s' n'
+              | c == c'         -> branch c (between' k1 s')            n'
+              | otherwise       -> branch c'         s'     (between' k n')
+
+
+    betw k (Val v' t')
+        = case k of
+          []                    -> maybe t' (flip val t') $ f v'
+          _                     -> val v' (between' k t')
+    betw _ _                     = normError "update'"
+-}
+-- ----------------------------------------
 --
 -- A prefix tree visitor
 
