@@ -17,4 +17,4 @@ veryclean: clean
 	rm -rf *.csv
 
 %.dict:
-	aspell -l $* dump master | aspell -l de expand | tr ' ' '\n' > $@
+	aspell -l $* dump master | aspell -l de_DE expand | tr ' ' '\n' > $@

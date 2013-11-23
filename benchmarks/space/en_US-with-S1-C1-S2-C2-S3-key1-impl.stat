@@ -1,0 +1,5 @@
+size     m =     118864 entries
+space    m =     914276 cells
+keyChars m =     272192 chars used for keys
+keySize  m =    1024549 chars in all keys
+stat     m = [("branch",22757),("brseq-10",30),("brseq-11",16),("brseq-12",12),("brseq-13",2),("brseq-14",1),("brseq-16",1),("brseq-2",31266),("brseq-3",8999),("brseq-4",4441),("brseq-5",2400),("brseq-6",1087),("brseq-7",533),("brseq-8",272),("brseq-9",103),("brval",7839),("last",19971),("leaf",30096),("lssel-2",471),("lssel-3",108),("lssel-4",19),("lssel-5",6),("lssel-6",1),("lssel-8",1),("lssel-9",1),("lsseq-10",22),("lsseq-11",6),("lsseq-12",5),("lsseq-2",19464),("lsseq-3",5184),("lsseq-4",3020),("lsseq-5",824),("lsseq-6",426),("lsseq-7",231),("lsseq-8",113),("lsseq-9",52),("lsval",10334),("size-key1",211291),("space-key1",325000),("val",39104)]
