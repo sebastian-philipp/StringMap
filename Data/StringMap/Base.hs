@@ -523,7 +523,7 @@ lookupGE k0                     = look k0 . norm
 lookupLE                        :: Key -> StringMap a -> StringMap a
 lookupLE k0                     = look k0 . norm
     where
-    look [] t                   = t
+    look [] t                   = empty
     look k@(c : k1) (Branch c' s' n')
         | c <  c'               = empty
         | c == c'               = branch c' (lookupLE k1 s') empty
