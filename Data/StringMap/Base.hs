@@ -61,6 +61,7 @@ module Data.StringMap.Base
         , lookupGE
         , lookupLE
         , lookupRange
+        , between
 
         -- * Construction
         , empty
@@ -843,22 +844,20 @@ between l       u       t       = betw l u $ norm t
 
     betw _ _ Empty              = empty
 
-    betw [] u (Val v' t')       = val v' $ between' t'
-    betw l (Nothing) (Val v' t')= val v' $ between' t'
-    betw l (Just u) (Val v' t')
-        | l > u                 = empty
-        | otherwise             = between' t'
-
-    betw _l       (Just [])  t' = empty
-    betw []       (Nothing)  t' = t'
+    betw [] _u (Val v' t')      = val v' $ between' t'
+    betw _l _u (Val _v' t')     = between' t'
 
 
-    betw []       (Just u'@(u:us))  (Branch s' c' n')
-        | s' < u                = branch s' c' (between' n')
-        | s' == u               = branch s' (between [] (Just us) c') (between' n')
+    betw _l      (Just [])  _t' = empty
+    betw []      (Nothing)  t'  = t'
+
+
+    betw []        (Just (u':us))   (Branch s' c' n')
+        | s' < u'               = branch s' c' (between' n')
+        | s' == u'              = branch s' (between [] (Just us) c') (between' n')
         | otherwise             = empty
 
-    betw l'@(l:ls) Nothing          (Branch s' c' n')
+    betw l'@(l:ls)  Nothing         (Branch s' c' n')
         | s' < l                = between l' Nothing n'
         | s' == l               = branch s' (between ls Nothing c') n'
         | otherwise             = branch s' c' n'
@@ -874,22 +873,6 @@ between l       u       t       = betw l u $ norm t
 
     betw _ _ _                  = normError "between"
 
-{-
-    betw k (Branch c' s' n')
-        = case k of
-          []                    -> branch c' s' n'
-          (c : k1)
-              | c <  c'         -> branch c' s' n'
-              | c == c'         -> branch c (between' k1 s')            n'
-              | otherwise       -> branch c'         s'     (between' k n')
-
-
-    betw k (Val v' t')
-        = case k of
-          []                    -> maybe t' (flip val t') $ f v'
-          _                     -> val v' (between' k t')
-    betw _ _                     = normError "update'"
--}
 -- ----------------------------------------
 --
 -- A prefix tree visitor

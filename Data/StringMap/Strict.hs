@@ -58,6 +58,8 @@ module Data.StringMap.Strict
         , prefixFind
         , prefixFindWithKey
         , prefixFindWithKeyBF
+        , lookupRange
+        , between
 
         -- * Construction
         , empty

@@ -6,7 +6,7 @@ import           Data.StringMap
 
 
 import qualified Data.Char                            as Char (intToDigit)
-import qualified Data.List                            as List (nubBy, (!!), map, zip)
+import qualified Data.List                            as List (nubBy, (!!), map, zip, foldl)
 import qualified Data.Map                             as Map (empty, fromList,
                                                               map, toList)
 import qualified Data.Set                             as Set (fromList)
@@ -81,8 +81,8 @@ main = do
        , testProperty "fromList - toList" prop_fromListToList
        , testProperty "space" prop_space
        , testProperty "lookupNoCaseBF is redundant" prop_lookupNoCaseBF
+       , testProperty "prop_range" prop_range
        ]
-    testNF
 
 ------------------------------------------------------------------------
 
@@ -412,23 +412,26 @@ prop_lookupNoCaseBF l  k = (test' lookupNoCaseBF) == (test' lookupNoCase)
       test' :: (Key -> StringMap Int -> [(Key, Int)]) -> [(Key, Int)]
       test' f =  f key (fromList ul)
 
-powerset :: [a] -> [[a]]
-powerset [] = [[]]
-powerset (!x : xs) = powerset xs ++ List.map (x:) (powerset xs)
 
-genPowerset :: String -> IO [([Char], Int)]
-genPowerset s = do
-    let ps =  List.zip (powerset s) [1::Int ..]
-    return $! deepseq ps ps
-
-testNF :: IO ()
-testNF = do
-    p1 <- genPowerset "ab"
-    p2 <- genPowerset "aa"
-    GHC.assertNFNamed "p1" $! fromList p1
-    GHC.assertNFNamed "p2" $! fromList p2
-    print $ show $ fromList p2
-    return ()
+prop_range :: [Key] -> Key -> Key -> Bool
+prop_range l lower' upper' = validInside && validOutside
+    where
+    lower = min lower' upper'
+    upper = max lower' upper'
+    m = fromList $ zip l [1..]
+    inside :: StringMap Int
+    inside = between lower (Just upper) m
+--    inside = lookupRange lower upper m
+    outside :: StringMap Int
+    outside = m `difference` inside
+    validKeyInside ::  Bool -> (Key, Int) -> Bool
+    validKeyInside b (k, _) = b && k >= lower && k <= upper
+    validKeyOutside ::  Bool -> (Key, Int) -> Bool
+    validKeyOutside b (k, _) = b && (k < lower || k > upper)
+    validInside :: Bool
+    validInside = List.foldl validKeyInside True (toList inside)
+    validOutside :: Bool
+    validOutside = List.foldl validKeyOutside True (toList outside)
 
 
 

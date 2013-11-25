@@ -24,9 +24,6 @@ mkA :: [Int] -> Attr
 mkA xs = A $!! xs
 
 
-testL :: [String] -> IO ()
-testL l = check (show l)$ fromList $ fromList' $ zip (l) (fmap (\x -> [x]) [1..])
-
 
 -- some simple test data
 m1, m2, m3 :: Map
@@ -67,6 +64,15 @@ prop_union = monadicIO $ do
                             l1 <- pick arbitrary
                             l2 <- pick arbitrary
                             let sm = (fromList''' l1 `union` fromList''' l2)
+                            passed <- run $ isNF $! sm
+                            run $ assertNF $! sm
+                            assert passed
+
+prop_diff :: Property
+prop_diff = monadicIO $ do
+                            l1 <- pick arbitrary
+                            l2 <- pick arbitrary
+                            let sm = (fromList''' l1 `difference` fromList''' l2)
                             passed <- run $ isNF $! sm
                             run $ assertNF $! sm
                             assert passed
