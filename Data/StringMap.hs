@@ -37,7 +37,6 @@ module Data.StringMap
     , prefixFind
     , prefixFindWithKey
     , prefixFindWithKeyBF
-    , between
     , lookupRange
 
     -- * Construction

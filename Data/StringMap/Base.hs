@@ -61,7 +61,6 @@ module Data.StringMap.Base
         , lookupGE
         , lookupLE
         , lookupRange
-        , between
 
         -- * Construction
         , empty
@@ -523,7 +522,7 @@ lookupGE k0                     = look k0 . norm
 lookupLE                        :: Key -> StringMap a -> StringMap a
 lookupLE k0                     = look k0 . norm
     where
-    look [] t                   = empty
+    look [] _t                  = empty
     look k@(c : k1) (Branch c' s' n')
         | c <  c'               = empty
         | c == c'               = branch c' (lookupLE k1 s') empty
@@ -831,47 +830,6 @@ mapM'' f k                      = mapn . norm
                                   n' <- mapM'' f          k  n
                                   return $ branch c s' n'
     mapn _                      = normError "mapM''"
-
--- ----------------------------------------
--- | Between
-
-between                         :: Key -> Maybe Key -> StringMap a -> StringMap a
--- between Nothing Nothing t       = t
-between l       u       t       = betw l u $ norm t
-    where
-    between'                    = between l u
-
-
-    betw _ _ Empty              = empty
-
-    betw [] _u (Val v' t')      = val v' $ between' t'
-    betw _l _u (Val _v' t')     = between' t'
-
-
-    betw _l      (Just [])  _t' = empty
-    betw []      (Nothing)  t'  = t'
-
-
-    betw []        (Just (u':us))   (Branch s' c' n')
-        | s' < u'               = branch s' c' (between' n')
-        | s' == u'              = branch s' (between [] (Just us) c') (between' n')
-        | otherwise             = empty
-
-    betw l'@(l:ls)  Nothing         (Branch s' c' n')
-        | s' < l                = between l' Nothing n'
-        | s' == l               = branch s' (between ls Nothing c') n'
-        | otherwise             = branch s' c' n'
-
-    betw l'@(l:ls) (Just u'@(u:us)) (Branch s' c' n')
-        | l > u                 = empty
-        | s' < l                = between l' (Just u') n'
-        | s' == l && l == u     = branch s' (between ls (Just us) c') empty
-        | s' == l               = branch s' (between ls Nothing c') (between [] (Just u') n')
-        | s' < u                = branch s' c' (between [] (Just u') n')
-        | s' == u               = branch s' (between [] (Just us) c') empty
-        | otherwise             = empty
-
-    betw _ _ _                  = normError "between"
 
 -- ----------------------------------------
 --

@@ -49,6 +49,7 @@ main = do
         , bench "fromList" $ whnf M.fromList elems
 --        , bench "fromAscList" $ whnf M.fromAscList elems
 --        , bench "fromDistinctAscList" $ whnf M.fromDistinctAscList elems
+        , bench "lookupRange" $ whnf (M.lookupRange "a" "b") m
         ]
   where
     sum k v1 v2 = k + v1 + v2

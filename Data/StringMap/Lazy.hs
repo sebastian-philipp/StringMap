@@ -57,7 +57,6 @@ module Data.StringMap.Lazy
     , prefixFindWithKey
     , prefixFindWithKeyBF
     , lookupRange
-    , between
 
     -- * Construction
     , empty

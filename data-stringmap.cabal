@@ -1,5 +1,5 @@
 name:         data-stringmap
-version:      0.9.1
+version:      0.9.2
 license:      MIT
 license-file: LICENSE
 author:       Uwe Schmidt, Sebastian Philipp
@@ -26,9 +26,9 @@ source-repository head
 
 Library
     build-depends: base       >= 4.5 && < 5,
-                   deepseq    >= 1.2,
-                   binary     >= 0.5,
-                   containers >= 0.4
+                   deepseq    >= 1.2 && < 2,
+                   binary     >= 0.5 && < 1,
+                   containers >= 0.4 && < 1
 
     ghc-options: -O2 -Wall -fwarn-tabs -fno-warn-unused-binds
 
@@ -54,7 +54,8 @@ test-suite properties
                   test-framework             >= 0.6,
                   test-framework-quickcheck2 >= 0.2,
                   test-framework-hunit       >= 0.2,
-                  ghc-heap-view              >= 0.5
+                  ghc-heap-view              >= 0.5,
+                  deepseq                    >= 1.2 && < 2
 
   ghc-options:    -Wall -fwarn-tabs
   hs-source-dirs: tests

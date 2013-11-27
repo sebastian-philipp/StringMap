@@ -7,7 +7,8 @@
 
 OTHER_FILES += README.md \
     benchmarks/Makefile \
-    tests/StringMapStrict.hs
+    tests/StringMapStrict.hs \
+    prologue.txt
 OTHER_FILES += data-stringmap.cabal
 OTHER_FILES += Data/StringMap/StringSet.hs
 OTHER_FILES += Data/StringMap/Types.hs

@@ -6,7 +6,7 @@ import           Data.StringMap
 
 
 import qualified Data.Char                            as Char (intToDigit)
-import qualified Data.List                            as List (nubBy, (!!), map, zip, foldl)
+import qualified Data.List                            as List (nubBy, (!!), foldl)
 import qualified Data.Map                             as Map (empty, fromList,
                                                               map, toList)
 import qualified Data.Set                             as Set (fromList)
@@ -19,8 +19,6 @@ import           Test.Framework.Providers.QuickCheck2
 import           Test.HUnit                           hiding (Test, Testable)
 import           Text.Show.Functions                  ()
 
-import qualified GHC.AssertNF                         as GHC
-import Control.DeepSeq                                (deepseq)
 
 default (Int)
 
@@ -420,8 +418,7 @@ prop_range l lower' upper' = validInside && validOutside
     upper = max lower' upper'
     m = fromList $ zip l [1..]
     inside :: StringMap Int
-    inside = between lower (Just upper) m
---    inside = lookupRange lower upper m
+    inside = lookupRange lower upper m
     outside :: StringMap Int
     outside = m `difference` inside
     validKeyInside ::  Bool -> (Key, Int) -> Bool
