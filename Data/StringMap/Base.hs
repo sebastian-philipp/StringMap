@@ -532,6 +532,7 @@ lookupGE k0                     = look k0 . norm
 lookupLE                        :: Key -> StringMap a -> StringMap a
 lookupLE k0                     = look k0 . norm
     where
+    look [] (Val v' _t')        = (Val v' empty)
     look [] _t                  = empty
     look k@(c : k1) (Branch c' s' n')
         | c <  c'               = empty
@@ -543,9 +544,8 @@ lookupLE k0                     = look k0 . norm
     look _ _                    = normError "lookupGE"
 
 -- | Combination of 'lookupLE' and 'lookupGE'
---
--- the following law holds: @lookupRange key key == lookupPx' key@
-
+-- @keys $ lookupRange "a" "b" $ fromList $ zip ["", "a", "ab", "b", "ba", "c"] [1..] = ["a","ab","b"]@
+-- For all keys in @k = keys $ lookupRange lb ub m@, this property holts true: @k >= ub && k <= lb@
 lookupRange                     :: Key -> Key -> StringMap a -> StringMap a
 lookupRange lb ub               = lookupLE ub . lookupGE lb
 

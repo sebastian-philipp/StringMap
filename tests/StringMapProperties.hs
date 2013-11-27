@@ -74,6 +74,7 @@ main = do
        , testCase "prefixFindCaseWithKeyBF" test_prefixFindCaseWithKeyBF
        , testCase "prefixFindNoCaseWithKeyBF" test_prefixFindNoCaseWithKeyBF
        -- , testCase "lookupNoCaseBF" test_lookupNoCaseBF
+       , testCase "lookuprange" test_range
        , testProperty "insert to singleton"  prop_singleton
        , testProperty "map a StringMap" prop_map
        , testProperty "fromList - toList" prop_fromListToList
@@ -379,6 +380,12 @@ test_prefixFindNoCaseWithKeyBF = do
 
 test_lookupNoCaseBF :: Assertion
 test_lookupNoCaseBF = undefined
+
+test_range :: Assertion
+test_range = do
+    let m = fromList $ zip ["", "a", "aa", "ab", "ac", "b", "ba", "c"] [_1..]
+    let inside = fromList $ zip ["a", "aa", "ab", "ac", "b"] [_1..]
+    (keys $ lookupRange "a" "b" m) @?= (keys $ inside)
 
 ----------------------------------------------------------------
 -- QuickCheck
