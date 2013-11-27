@@ -322,6 +322,16 @@ siseq k     c                   = case uncons1 k of
                                     _         -> LsSeq k  c
 {-# INLINE siseq #-}
 
+anyseq                          :: Key1 -> StringMap v -> StringMap v
+anyseq Nil   c                  = c
+anyseq k     (Leaf v)           = case uncons1 k of
+                                   (k1, Nil) -> LsVal k1 v
+                                   _         -> LsSeL k  v
+anyseq k     c                  = case uncons1 k of
+                                   (k1, Nil) -> Last  k1 c
+                                   _         -> LsSeq k  c
+{-# INLINE anyseq #-}
+
 -- smart selectors
 
 norm                            :: StringMap v -> StringMap v
@@ -367,7 +377,7 @@ null _                  = False
 -- | /O(1)/ Create a map with a single element.
 
 singleton               :: Key -> a -> StringMap a
-singleton k v           = siseq (fromKey k) (val v empty)
+singleton k v           = anyseq (fromKey k) (val v empty)
 
 {-# INLINE singleton #-}
 
