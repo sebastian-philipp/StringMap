@@ -12,7 +12,7 @@
   Portability: not portable
 
   Facade for prefix tree implementation
-  
+
 -}
 
 -- ----------------------------------------------------------------------------
@@ -33,7 +33,7 @@ module Data.StringMap
     , size
     , member
     , lookup
-    , findWithDefault  
+    , findWithDefault
     , prefixFind
     , prefixFindWithKey
     , prefixFindWithKeyBF
@@ -49,6 +49,8 @@ module Data.StringMap
     , insertWithKey
 
     -- ** Delete\/Update
+    , adjust
+    , adjustWithKey
     , delete
     , update
     , updateWithKey
@@ -106,8 +108,11 @@ module Data.StringMap
     )
 where
 
-import Prelude hiding ( succ, lookup, map, mapM, null )
+import           Prelude                    hiding (lookup, map, mapM, null,
+                                             succ)
 
-import Data.StringMap.Base
-import Data.StringMap.FuzzySearch
-import Data.StringMap.Types
+import           Data.StringMap.Base
+import           Data.StringMap.FuzzySearch
+import           Data.StringMap.Types
+
+-- ----------------------------------------
