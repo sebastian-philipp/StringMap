@@ -30,9 +30,9 @@
   complexity of /O(max(L,R))/. This means that the operation can become linear with
   /R/, the number of elements found for the prefix, with a minimum of /L/.
 
-  The module exports include the internal data types, their constructors and access
+  The module export list includes the internal data types, their constructors and access
   functions for ultimate flexibility. Derived modules should not export these
-  (as shown in "Holumbus.Data.StrMap") to provide only a restricted interface.
+  (as shown in "Data.StringMap") to provide only a restricted interface.
 
 -}
 
@@ -41,7 +41,8 @@
 module Data.StringMap.Base
         (
         -- * Map type
-          StringMap (Empty, Val, Branch)-- (..) I don't think we should export the constructors.
+          StringMap (Empty, Val, Branch) -- the constructors are exported for pattern matching only
+                                         -- use cases occur in Data.StringMap.Strict
         , Key
 
         -- * Operators
@@ -541,7 +542,7 @@ lookupLE k0                     = look k0 . norm
     look _          Empty       = empty
     look k         (Val v' t')  = val v' (lookupLE k t')
 
-    look _ _                    = normError "lookupGE"
+    look _ _                    = normError "lookupLE"
 
 -- | Combination of 'lookupLE' and 'lookupGE'
 -- @keys $ lookupRange "a" "b" $ fromList $ zip ["", "a", "ab", "b", "ba", "c"] [1..] = ["a","ab","b"]@

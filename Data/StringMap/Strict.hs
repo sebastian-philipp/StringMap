@@ -127,16 +127,9 @@ module Data.StringMap.Strict
         )
 where
 
-import           Data.StringMap.Base hiding
-        (
-          singleton
-        , insert
-        , insertWith
-        , insertWithKey
-        , fromList
-        , union
-        , unionWith
-        )
+import           Data.StringMap.Base        hiding (fromList, insert,
+                                             insertWith, insertWithKey,
+                                             singleton, union, unionWith)
 import           Data.StringMap.FuzzySearch
 import           Prelude                    hiding (lookup, map, mapM, null,
                                              succ)
@@ -152,11 +145,6 @@ import qualified Data.List                  as L
 
 singleton               :: Key -> a -> StringMap a
 singleton k !v          = siseq (fromKey k) (val v empty)
-
-{- OLD
-singleton               :: Key -> a -> StringMap a
-singleton !k v           = L.foldr (\ c r -> branch c r empty) (val v empty) $ k -- siseq k (val v empty)
--}
 
 {-# INLINE singleton #-}
 
@@ -248,3 +236,4 @@ union' f pt1 pt2                                = uni (norm pt1) (norm pt2)
         | otherwise                             = branch c1 (uni' s1 s2) (uni' n1 n2)
     uni _                    _                  = normError "union'"
 
+-- ----------------------------------------

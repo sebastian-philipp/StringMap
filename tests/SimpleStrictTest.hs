@@ -5,11 +5,11 @@ module SimpleStrictTest where
 import           Control.Arrow         (second)
 import           Control.DeepSeq       (($!!))
 import           Data.Monoid
-import qualified Data.StringMap.Base   as B
 import           Data.StringMap.Strict
 import           GHC.AssertNF
 
 newtype Attr = A [Int]
+    deriving (Show)
 
 instance Monoid Attr where
     mempty = mkA []
@@ -28,7 +28,7 @@ m0 = insert "" (mkA [0,1+2]) empty
 m1 = insert "abc" (mkA [1,2,3]) empty
 m2 = insert "x" (mkA [0,1]) empty
 m3 = insertWith mappend "abc" (mkA [4,5,6]) m1
-m5 = singleton "abc" $! (mkA [42])
+m5 = singleton "abc" (mkA [42])
 
 fromList' :: [(d, [Int])] -> [(d, Attr)]
 fromList' = fmap (second mkA)
