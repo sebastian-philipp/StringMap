@@ -30,9 +30,9 @@
   complexity of /O(max(L,R))/. This means that the operation can become linear with
   /R/, the number of elements found for the prefix, with a minimum of /L/.
 
-  The module exports include the internal data types, their constructors and access
+  The module export list includes the internal data types, their constructors and access
   functions for ultimate flexibility. Derived modules should not export these
-  (as shown in "Holumbus.Data.StrMap") to provide only a restricted interface.
+  (as shown in "Data.StringMap") to provide only a restricted interface.
 
 -}
 
@@ -41,7 +41,8 @@
 module Data.StringMap.Base
         (
         -- * Map type
-          StringMap (Empty, Val, Branch)-- (..) I don't think we should export the constructors.
+          StringMap (Empty, Val, Branch) -- the constructors are exported for pattern matching only
+                                         -- use cases occur in Data.StringMap.Strict
         , Key
 
         -- * Operators
@@ -72,6 +73,8 @@ module Data.StringMap.Base
         , insertWithKey
 
         -- ** Delete\/Update
+        , adjust
+        , adjustWithKey
         , delete
         , update
         , updateWithKey
@@ -126,7 +129,7 @@ module Data.StringMap.Base
         , siseq
         , fromKey
         , norm
-        , normError
+        , normError'
         , deepNorm
         )
 where
@@ -145,6 +148,8 @@ import           Data.Maybe               hiding (mapMaybe)
 
 import           Data.StringMap.StringSet
 import           Data.StringMap.Types
+
+-- ----------------------------------------
 
 data StringMap v       = Empty
                         | Val    { value' ::   v
@@ -190,6 +195,8 @@ data StringMap v       = Empty
                                  , value' ::   v                -- and a value
                                  }
                           deriving (Show, Eq, Ord)
+
+-- ----------------------------------------
 
 -- | strict list of chars with unpacked fields
 -- and packing of 2 or 3 chars into a single object
@@ -361,8 +368,11 @@ deepNorm t0
 
 -- ----------------------------------------
 
+normError'              :: String -> String -> a
+normError' m f          = error (m ++ "." ++ f ++ ": pattern match error, prefix tree not normalized")
+
 normError               :: String -> a
-normError f             = error (f ++ ": pattern match error, prefix tree not normalized")
+normError               = normError' "Data.StringMap.Base"
 
 -- ----------------------------------------
 
@@ -486,6 +496,16 @@ delete                          = update' (const Nothing)
 
 {-# INLINE delete #-}
 
+adjust                          :: (a -> a) -> Key -> StringMap a -> StringMap a
+adjust f                        = update' (Just . f)
+
+{-# INLINE adjust #-}
+
+adjustWithKey                   :: (Key -> a -> a) -> Key -> StringMap a -> StringMap a
+adjustWithKey f k               = update' (Just . f k) k
+
+{-# INLINE adjustWithKey #-}
+
 -- ----------------------------------------
 
 lookupPx'                       :: Key -> StringMap a -> StringMap a
@@ -541,11 +561,12 @@ lookupLE k0                     = look k0 . norm
     look _          Empty       = empty
     look k         (Val v' t')  = val v' (lookupLE k t')
 
-    look _ _                    = normError "lookupGE"
+    look _ _                    = normError "lookupLE"
 
 -- | Combination of 'lookupLE' and 'lookupGE'
 -- @keys $ lookupRange "a" "b" $ fromList $ zip ["", "a", "ab", "b", "ba", "c"] [1..] = ["a","ab","b"]@
 -- For all keys in @k = keys $ lookupRange lb ub m@, this property holts true: @k >= ub && k <= lb@
+
 lookupRange                     :: Key -> Key -> StringMap a -> StringMap a
 lookupRange lb ub               = lookupLE ub . lookupGE lb
 
@@ -607,6 +628,7 @@ update' f k0                    = upd k0 . norm
         = case k of
           []                    -> maybe t' (flip val t') $ f v'
           _                     -> val v' (upd' k t')
+
     upd _ _                     = normError "update'"
 
 -- ----------------------------------------

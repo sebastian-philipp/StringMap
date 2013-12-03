@@ -70,6 +70,8 @@ module Data.StringMap.Strict
         , insertWithKey
 
         -- ** Delete\/Update
+        , adjust
+        , adjustWithKey
         , delete
         , update
         , updateWithKey
@@ -127,17 +129,14 @@ module Data.StringMap.Strict
         )
 where
 
-import           Data.StringMap.Base hiding
-        (
-          singleton
-        , insert
-        , insertWith
-        , insertWithKey
-        , fromList
-        , union
-        , unionWith
-        )
+import           Data.StringMap.Base        hiding (adjust, adjustWithKey,
+                                             delete, fromList, insert,
+                                             insertWith, insertWithKey,
+                                             singleton, union, unionWith,
+                                             update, updateWithKey)
+import qualified Data.StringMap.Base        as Base
 import           Data.StringMap.FuzzySearch
+
 import           Prelude                    hiding (lookup, map, mapM, null,
                                              succ)
 
@@ -146,17 +145,19 @@ import qualified Data.List                  as L
 --import Data.BitUtil
 --import Data.StrictPair
 
+-- ----------------------------------------
+
+normError               :: String -> a
+normError               = normError' "Data.StringMap.Strict"
+
+-- ----------------------------------------
+
 -- | /O(1)/ Create a map with a single element.
 --
 -- the attribute value is evaluated to WHNF
 
 singleton               :: Key -> a -> StringMap a
-singleton k !v          = siseq (fromKey k) (val v empty)
-
-{- OLD
-singleton               :: Key -> a -> StringMap a
-singleton !k v           = L.foldr (\ c r -> branch c r empty) (val v empty) $ k -- siseq k (val v empty)
--}
+singleton k !v          = Base.singleton k v  -- anyseq (fromKey k) (val v empty)
 
 {-# INLINE singleton #-}
 
@@ -182,6 +183,49 @@ insertWith f !k v t              = insert' f v k t
 insertWithKey                   :: (Key -> a -> a -> a) -> Key -> a -> StringMap a -> StringMap a
 insertWithKey f !k               = insertWith (f k) k
 
+-- | /O(n)/ Creates a trie from a list of key\/value pairs.
+
+fromList                        :: [(Key, a)] -> StringMap a
+fromList                        = L.foldl' (\p (k, v) -> insert k v p) empty
+
+-- | /O(min(n,L))/ Updates a value at a given key (if that key is in the trie) or deletes the
+-- element if the result of the updating function is 'Nothing'. If the key is not found, the trie
+-- is returned unchanged.
+-- The updated value is evaluated to WHNF before insertion.
+
+update                          :: (a -> Maybe a) -> Key -> StringMap a -> StringMap a
+update                          = update'
+
+{-# INLINE update #-}
+
+-- | /O(min(n,L))/ Updates a value at a given key (if that key is in the trie) or deletes the
+-- element if the result of the updating function is 'Nothing'. If the key is not found, the trie
+-- is returned unchanged.
+--  The updated value is evaluated to WHNF before insertion.
+
+updateWithKey                   :: (Key -> a -> Maybe a) -> Key -> StringMap a -> StringMap a
+updateWithKey f k               = update' (f k) k
+
+{-# INLINE updateWithKey #-}
+
+-- | /O(min(n,L))/ Delete an element from the map. If no element exists for the key, the map
+-- remains unchanged.
+
+delete                          :: Key -> StringMap a -> StringMap a
+delete                          = update' (const Nothing)
+
+{-# INLINE delete #-}
+
+adjust                          :: (a -> a) -> Key -> StringMap a -> StringMap a
+adjust f                        = update' (Just . f)
+
+{-# INLINE adjust #-}
+
+adjustWithKey                   :: (Key -> a -> a) -> Key -> StringMap a -> StringMap a
+adjustWithKey f k               = update' (Just . f k) k
+
+{-# INLINE adjustWithKey #-}
+
 -- ----------------------------------------
 
 insert'                         :: (a -> a -> a) -> a -> Key -> StringMap a -> StringMap a
@@ -206,9 +250,31 @@ insert' f v k0                  = ins k0 . norm
 
     ins _ _                     = normError "insert'"
 
--- | /O(n)/ Creates a trie from a list of key\/value pairs.
-fromList                        :: [(Key, a)] -> StringMap a
-fromList                        = L.foldl' (\p (k, v) -> insert k v p) empty
+-- ----------------------------------------
+
+update'                         :: (a -> Maybe a) -> Key -> StringMap a -> StringMap a
+update' f k0                    = upd k0 . norm
+    where
+    upd'                        = update' f
+
+    upd k (Branch c' s' n')
+        = case k of
+          []                    -> branch c' s' n'
+          (c : k1)
+              | c <  c'         -> branch c' s' n'
+              | c == c'         -> branch c (upd' k1 s')            n'
+              | otherwise       -> branch c'         s'     (upd' k n')
+
+    upd _ Empty                 = empty
+
+    upd k (Val v' t')
+        = case k of
+          []                    -> case f v' of
+                                     Nothing   -> t'
+                                     Just !v'' -> val v'' t'   -- force WHNF of new attr value
+          _                     -> val v' (upd' k t')
+
+    upd _ _                     = normError "update'"
 
 -- ----------------------------------------
 
@@ -248,3 +314,4 @@ union' f pt1 pt2                                = uni (norm pt1) (norm pt2)
         | otherwise                             = branch c1 (uni' s1 s2) (uni' n1 n2)
     uni _                    _                  = normError "union'"
 
+-- ----------------------------------------
