@@ -31,6 +31,8 @@ type Map = StringMap Attr
 mkA :: [Int] -> Attr
 mkA xs = A $!! xs
 
+consA :: Int -> Attr -> Attr
+consA n a = mkA [n] `mappend` a
 
 default (Int)
 
@@ -42,9 +44,15 @@ main = defaultMain
        , testCase "m1" (checkIsNF m1)
        , testCase "m2" (checkIsNF m2)
        , testCase "m3" (checkIsNF m3)
+       , testCase "m5" (checkIsNF m3)
+       , testCase "m6" (checkIsNF m3)
        , testCase "fromList l4" (checkIsNF $ fromList l4)
        , testCase "m2 union m3" (checkIsNF $ m2 `union` m3)
-       , testCase "m2 unionWith m2" (checkIsNF $ unionWith mappend m2 m2)       
+       , testCase "m2 unionWith m2" (checkIsNF $ unionWith mappend m2 m2)
+       , testCase "adjust m6" (checkIsNF $ adjust (consA 42) "ab" m6)
+       , testCase "adjust m1" (checkIsNF $ adjust (consA 42) "xx" m1)
+       , testCase "delete m6" (checkIsNF $ delete "ab" m6)
+       , testCase "delete m1" (checkIsNF $ delete "xx" m1)     
 
        , testProperty "prop_simple" prop_simple
        , testProperty "prop_union" prop_union
@@ -55,14 +63,16 @@ test_isNF :: Assertion
 test_isNF = fmap not (isNF [(1::Int)..10]) @? "isNF"
 
 checkIsNF :: Map -> Assertion
-checkIsNF !m = isNF m @? "isNF"
+checkIsNF !m = isNF m @? ("isNF " ++ show m)
 
 -- some simple test data
-m0, m1, m2, m3 :: Map
+m0, m1, m2, m3, m5, m6 :: Map
 m0 = insert "" (mkA [0,1+2]) empty
 m1 = insert "abc" (mkA [1,2,3]) empty
-m2 = insert "xyz" (mkA [0,1]) empty
+m2 = insert "x" (mkA [0,1]) empty
 m3 = insertWith mappend "abc" (mkA [4,5,6]) m1
+m5 = singleton "abc" (mkA [42])
+m6 = fromList l4
 
 fromList' :: [(d, [Int])] -> [(d, Attr)]
 fromList' = fmap (second mkA)

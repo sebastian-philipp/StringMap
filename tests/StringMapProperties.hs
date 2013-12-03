@@ -106,9 +106,6 @@ _1, _4 :: Int
 _1 = 1
 _4 = 4
 
-test_exclamation :: Assertion
-test_exclamation = undefined
-
 test_value :: Assertion
 test_value =
     let m1 = fromList [("" ,_1),("a", 2)] in
