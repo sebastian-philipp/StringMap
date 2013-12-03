@@ -59,3 +59,19 @@ test-suite properties
 
   ghc-options:    -Wall -fwarn-tabs
   hs-source-dirs: tests
+test-suite strict
+  type:           exitcode-stdio-1.0
+  main-is:        StringMapStrict.hs
+  build-depends:  data-stringmap,
+                  base                       >= 4.5,
+                  containers                 >= 0.4,
+                  HUnit                      >= 1.2,
+                  QuickCheck                 >= 2.4,
+                  test-framework             >= 0.6,
+                  test-framework-quickcheck2 >= 0.2,
+                  test-framework-hunit       >= 0.2,
+                  ghc-heap-view              >= 0.5,
+                  deepseq                    >= 1.2 && < 2
+
+  ghc-options:    -Wall -fwarn-tabs
+  hs-source-dirs: tests
