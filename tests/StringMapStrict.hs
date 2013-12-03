@@ -5,6 +5,7 @@
 module Main
 where
 
+import           Prelude                  hiding (lookup, map, mapM, null, succ)
 import           Data.StringMap.Strict
 
 import           Control.Arrow         (second)
@@ -21,7 +22,11 @@ import qualified Test.QuickCheck.Monadic as Q (assert, monadicIO, pick, run, Pro
 import           Test.HUnit                           hiding (Test, Testable)
 
 newtype Attr = A [Int]
-    deriving (Show, Monoid)
+    deriving (Show)
+
+instance Monoid Attr where
+    mempty = mkA []
+    mappend (A xs) (A ys) = mkA $! xs ++ ys -- mappend needs to be strict, because the stingList won't evaluate A deep.
 
 
 type Map = StringMap Attr
