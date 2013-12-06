@@ -103,7 +103,7 @@ module Data.StringMap.Lazy
     -- ** Lists
     , fromList
     , toList
-    , toListBF
+    , toListShortestFirst
 
     -- ** Maps
     , fromMap
@@ -114,14 +114,9 @@ module Data.StringMap.Lazy
     , keyChars
 
     -- * Prefix and Fuzzy Search
-    , prefixFindCaseWithKey     -- fuzzy search
-    , prefixFindNoCaseWithKey
-    , prefixFindNoCase
+    , prefixFilter     -- fuzzy search
+    , prefixFilterNoCase
     , lookupNoCase
-
-    , prefixFindCaseWithKeyBF
-    , prefixFindNoCaseWithKeyBF
-    , lookupNoCaseBF
     )
 where
 

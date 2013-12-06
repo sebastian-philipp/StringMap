@@ -110,7 +110,7 @@ module Data.StringMap.Base
         -- ** Lists
         , fromList
         , toList
-        , toListBF
+        , toListShortestFirst
 
         -- ** Maps
         , fromMap
@@ -1045,7 +1045,7 @@ keys                            = foldWithKey (\ k _v r -> k : r) []
 
 -- | returns all key-value pairs in breadth first order (short words first)
 -- this enables prefix search with upper bounds on the size of the result set
--- e.g. @ search ... >>> toListBF >>> take 1000 @ will give the 1000 shortest words
+-- e.g. @ search ... >>> toListShortestFirst >>> take 1000 @ will give the 1000 shortest words
 -- found in the result set and will ignore all long words
 --
 -- toList is derived from the following code found in the net when searching haskell breadth first search
@@ -1058,8 +1058,8 @@ keys                            = foldWithKey (\ k _v r -> k : r) []
 -- >        takeWhile (not . null) $
 -- >        iterate (concatMap subForest) [t]
 
-toListBF                        :: StringMap v -> [(Key, v)]
-toListBF                        = (\ t0 -> [(id, t0)])
+toListShortestFirst                        :: StringMap v -> [(Key, v)]
+toListShortestFirst                        = (\ t0 -> [(id, t0)])
                                   >>>
                                   iterate (concatMap (second norm >>> uncurry subForest))
                                   >>>
@@ -1085,7 +1085,7 @@ subForest _  _                  = error "StringMap.Base.subForest: Pattern match
 -- in the result. The result list contains short words first
 
 prefixFindWithKeyBF             :: Key -> StringMap a -> [(Key, a)]
-prefixFindWithKeyBF k           = fmap (first (k ++)) . toListBF . lookupPx' k
+prefixFindWithKeyBF k           = fmap (first (k ++)) . toListShortestFirst . lookupPx' k
 
 -- ----------------------------------------
 

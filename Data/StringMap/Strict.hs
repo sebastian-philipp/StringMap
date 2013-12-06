@@ -107,7 +107,7 @@ module Data.StringMap.Strict
         -- ** Lists
         , fromList
         , toList
-        , toListBF
+        , toListShortestFirst
 
         -- ** Maps
         , fromMap
@@ -118,14 +118,10 @@ module Data.StringMap.Strict
         , keyChars
 
         -- * Prefix and Fuzzy Search
-        , prefixFindCaseWithKey     -- fuzzy search
-        , prefixFindNoCaseWithKey
-        , prefixFindNoCase
+        , prefixFilter     -- fuzzy search
+        , prefixFilterNoCase
         , lookupNoCase
 
-        , prefixFindCaseWithKeyBF
-        , prefixFindNoCaseWithKeyBF
-        , lookupNoCaseBF
         )
 where
 
