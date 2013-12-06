@@ -59,6 +59,7 @@ test-suite properties
 
   ghc-options:    -Wall -fwarn-tabs
   hs-source-dirs: tests
+
 test-suite strict
   type:           exitcode-stdio-1.0
   main-is:        StringMapStrict.hs

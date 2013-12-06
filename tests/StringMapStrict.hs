@@ -26,12 +26,28 @@ newtype Attr = A [Int]
 
 instance Monoid Attr where
     mempty = mkA []
-    mappend (A xs) (A ys) = mkA $! xs ++ ys -- mappend needs to be strict, because the stingList won't evaluate A deep.
+    mappend (A xs) (A ys) = mkA (xs ++ ys)
 
+-- evaluation of x `mappend` y to WHNF leads to NF
+-- because of the $!! in mkA
+--
+-- example
+--
+--    A [1,2] `mappend` A [3,4]
+-- =  { subst of mappend }
+--    mkA ([1,2] ++ [3,4])
+-- =  { subst of mkA }
+--    A $!! ([1,2] ++ [3,4])
+-- =  { subst of $!! }
+--    A [1,2,3,4]
+--
+-- in a call of Data.StringMap.insert k (x `mappend` y) m
+-- the attribute is forced to be in WHNF, and this leads to NF
 
 type Map = StringMap Attr
 
--- strict constructor for Attr
+-- smart constructor for evaluation into NF
+-- before calling the constructor A
 
 mkA :: [Int] -> Attr
 mkA xs = A $!! xs
