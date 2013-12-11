@@ -4,7 +4,7 @@
 
 {- |
   Module     : Data.StringMap.Strict
-  Copyright  : Copyright (C) 2009-2012 Uwe Schmidt
+  Copyright  : Copyright (C) 2009-2013 Uwe Schmidt, Sebastian Philipp
   License    : MIT
 
   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
@@ -13,16 +13,16 @@
 
   An efficient implementation of maps from strings to arbitrary values.
 
-  Values can associated with an arbitrary byte key. Searching for keys is very fast, but
-  the prefix tree probably consumes more memory than "Data.Map". The main differences are the special
+  Values can be associated with an arbitrary [Char] key. Searching for keys is very fast.
+  The main differences to Data.Map and Data.IntMap are the special
   'prefixFind' functions, which can be used to perform prefix queries. The interface is
   heavily borrowed from "Data.Map" and "Data.IntMap".
 
   Most other function names clash with "Prelude" names, therefore this module is usually
   imported @qualified@, e.g.
 
-  > import Data.StringMap (StringMap)
-  > import qualified Data.StringMap as T
+  > import           Data.StringMap.Strict (StringMap)
+  > import qualified Data.StringMap.Strict as M
 
   Many functions have a worst-case complexity of /O(min(n,L))/. This means that the operation
   can become linear with the number of elements with a maximum of /L/, the length of the
@@ -30,9 +30,11 @@
   complexity of /O(max(L,R))/. This means that the operation can become linear with
   /R/, the number of elements found for the prefix, with a minimum of /L/.
 
-  The module exports include the internal data types, their constructors and access
-  functions for ultimate flexibility. Derived modules should not export these
-  (as shown in "Holumbus.Data.StrMap") to provide only a restricted interface.
+  This module has versions of the \"modifying\" operations,
+  like insert, update, delete and map, that force evaluating
+  the attribute values before doing the operation.
+  All \"reading\" operations and the data types are reexported
+  from Data.StringMap.Base.
 
 -}
 
@@ -127,9 +129,10 @@ where
 
 import           Data.StringMap.Base        hiding (adjust, adjustWithKey,
                                              delete, fromList, insert,
-                                             insertWith, insertWithKey,
-                                             singleton, union, unionWith,
-                                             update, updateWithKey)
+                                             insertWith, insertWithKey, map,
+                                             mapM, mapMaybe, mapWithKey,
+                                             mapWithKeyM, singleton, union,
+                                             unionWith, update, updateWithKey)
 import qualified Data.StringMap.Base        as Base
 import           Data.StringMap.FuzzySearch
 
@@ -222,6 +225,59 @@ adjustWithKey f k               = update' (Just . f k) k
 
 {-# INLINE adjustWithKey #-}
 
+-- | /O(n+m)/ Left-biased union of two maps. It prefers the first map when duplicate keys are
+-- encountered, i.e. ('union' == 'unionWith' 'const').
+
+union                           :: StringMap a -> StringMap a -> StringMap a
+union                           = union' const
+
+{-# INLINE union #-}
+
+-- | /O(n+m)/ Union with a combining function.
+
+unionWith                       :: (a -> a -> a) -> StringMap a -> StringMap a -> StringMap a
+unionWith                       = union'
+
+{-# INLINE unionWith #-}
+
+-- | /O(n)/ Map a function over all values in the prefix tree.
+
+map                             :: (a -> b) -> StringMap a -> StringMap b
+map f                           = mapWithKey (const f)
+
+{-# INLINE map #-}
+
+mapWithKey                      :: (Key -> a -> b) -> StringMap a -> StringMap b
+mapWithKey f                    = map' f id
+
+{-# INLINE mapWithKey #-}
+
+-- | /O(n)/ Updates a value or deletes the element,
+-- if the result of the updating function is 'Nothing'.
+
+mapMaybe                          :: (a -> Maybe b) -> StringMap a -> StringMap b
+mapMaybe                          = mapMaybe'
+
+{-# INLINE mapMaybe #-}
+
+-- | Monadic map
+
+mapM                            :: Monad m => (a -> m b) -> StringMap a -> m (StringMap b)
+mapM f                          = mapWithKeyM (const f)
+
+{-# INLINE mapM #-}
+
+-- | Monadic mapWithKey
+
+mapWithKeyM                     :: Monad m => (Key -> a -> m b) -> StringMap a -> m (StringMap b)
+mapWithKeyM f                   = mapM'' f id
+
+{-# INLINE mapWithKeyM #-}
+
+-- ----------------------------------------
+--
+-- internal functions forcing evaluation of attribute values to WHNF
+--
 -- ----------------------------------------
 
 insert'                         :: (a -> a -> a) -> a -> Key -> StringMap a -> StringMap a
@@ -274,17 +330,6 @@ update' f k0                    = upd k0 . norm
 
 -- ----------------------------------------
 
--- | /O(n+m)/ Left-biased union of two maps. It prefers the first map when duplicate keys are
--- encountered, i.e. ('union' == 'unionWith' 'const').
-
-union                                           :: StringMap a -> StringMap a -> StringMap a
-union                                           = union' const
-
--- | /O(n+m)/ Union with a combining function.
-
-unionWith                                       :: (a -> a -> a) -> StringMap a -> StringMap a -> StringMap a
-unionWith                                       = union'
-
 -- like union' from Base, but attr value is evaluated to WHNF
 
 union'                                          :: (a -> a -> a) -> StringMap a -> StringMap a -> StringMap a
@@ -311,3 +356,53 @@ union' f pt1 pt2                                = uni (norm pt1) (norm pt2)
     uni _                    _                  = normError "union'"
 
 -- ----------------------------------------
+
+-- map functions forcing evaluation of attr to WHNF
+
+map'                            :: (Key -> a -> b) -> (Key -> Key) -> StringMap a -> StringMap b
+map' _ _ (Empty)                = Empty
+map' f k (Val v t)              = (Val      $! (f (k []) v))         (map' f k t)
+map' f k (Branch c s n)         = Branch c  (map' f ((c :) . k)   s) (map' f k n)
+map' f k (Leaf v)               = Leaf      $! (f (k []) v)
+map' f k (Last c s)             = Last   c  (map' f ((c :)   . k) s)
+map' f k (LsSeq cs s)           = LsSeq  cs (map' f ((toKey cs ++) . k) s)
+map' f k (BrSeq cs s n)         = BrSeq  cs (map' f ((toKey cs ++) . k) s) (map' f k n)
+map' f k (LsSeL cs v)           = LsSeL  cs $! (f (k []) v)
+map' f k (BrSeL cs v n)         =(BrSeL  cs $! (f (k []) v))         (map' f k n)
+map' f k (LsVal c  v)           = LsVal  c  $! (f (k []) v)
+map' f k (BrVal c  v n)         =(BrVal  c  $! (f (k []) v))         (map' f k n)
+
+
+mapMaybe'                       :: (a -> Maybe b) -> StringMap a -> StringMap b
+mapMaybe' f                     = upd . norm
+    where
+    upd'                        = mapMaybe' f
+
+    upd (Branch c' s' n')       = branch c' (upd' s') (upd' n')
+    upd Empty                   = empty
+    upd (Val v' t')             = case f v' of
+                                    Nothing   -> t
+                                    Just !v'' -> val v'' t      -- force WHNF for v
+                                  where t = upd' t'
+    upd _                       = normError "update'"
+
+
+mapM''                          :: Monad m =>
+                                   (Key -> a -> m b) -> (Key -> Key) -> StringMap a -> m (StringMap b)
+mapM'' f k                      = mapn . norm
+    where
+    mapn'                       = mapM'' f
+
+    mapn Empty                  = return $ empty
+    mapn (Val v t)              = do
+                                  !v' <- f (k []) v     -- force WHNF for v'
+                                  t'  <- mapn' k t
+                                  return $ val v' t'
+    mapn (Branch c s n)         = do
+                                  s' <- mapn' ((c :) . k) s
+                                  n' <- mapn'          k  n
+                                  return $ branch c s' n'
+    mapn _                      = normError "mapM''"
+
+-- ----------------------------------------
+

@@ -4,14 +4,34 @@
 
 {- |
   Module     : Data.StringMap
-  Copyright  : Copyright (C) 2009-2012 Uwe Schmidt
+  Copyright  : Copyright (C) 2009-2013 Uwe Schmidt, Sebastian Philipp
   License    : MIT
 
-  Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
+  Maintainer : Uwe Schmidt (uwe@fh-wedel.de), Sebastian Philipp
   Stability  : experimental
   Portability: not portable
 
-  Facade for prefix tree implementation
+  An efficient implementation of maps from strings to arbitrary values.
+
+  Values can be associated with an arbitrary [Char] key. Searching for keys is very fast.
+  The main differences to Data.Map and Data.IntMap are the special
+  'prefixFind' functions, which can be used to perform prefix queries. The interface is
+  heavily borrowed from "Data.Map" and "Data.IntMap".
+
+  Most other function names clash with "Prelude" names, therefore this module is usually
+  imported @qualified@, e.g.
+
+  > import           Data.StringMap (StringMap)
+  > import qualified Data.StringMap as M
+
+  Many functions have a worst-case complexity of /O(min(n,L))/. This means that the operation
+  can become linear with the number of elements with a maximum of /L/, the length of the
+  key (the number of bytes in the list). The functions for searching a prefix have a worst-case
+  complexity of /O(max(L,R))/. This means that the operation can become linear with
+  /R/, the number of elements found for the prefix, with a minimum of /L/.
+
+  This module reexports all generally usefull types and operations
+  from Data.StringMap.Base.
 
 -}
 
