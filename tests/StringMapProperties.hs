@@ -7,7 +7,7 @@ import qualified Data.Char                            as Char (intToDigit)
 import qualified Data.List                            as List (nubBy, foldl)
 import qualified Data.Map                             as Map (empty, fromList,
                                                               map, toList)
-import qualified Data.Set                             as Set (fromList)
+import qualified Data.Set                             as Set
 import           Prelude                              hiding (filter, foldl,
                                                        foldr, lookup, map, null)
 
@@ -75,6 +75,7 @@ main = do
        , testProperty "fromList - toList" prop_fromListToList
        , testProperty "space" prop_space
        , testProperty "prop_range" prop_range
+       , testProperty "prop_intersection" prop_intersection
        ]
 
 ------------------------------------------------------------------------
@@ -392,5 +393,11 @@ prop_range l lower' upper' = validInside && validOutside
     validOutside :: Bool
     validOutside = List.foldl validKeyOutside True (toList outside)
 
+prop_intersection :: [Key] -> [Key] -> Bool
+prop_intersection k1s k2s = ((lToM k1s) `intersection` (lToM k2s)) `eqMS` ((Set.fromList k1s) `Set.intersection` (Set.fromList k2s))
+  where 
+    lToM ks = fromList $ zip ks [1..]
+    eqMS :: StringMap Int -> Set.Set Key -> Bool
+    eqMS m s = (keys m) == (Set.toList s)
 
 

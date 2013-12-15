@@ -86,7 +86,10 @@ module Data.StringMap
     , differenceWith
     , differenceWithKey
 
-
+    -- ** Interset
+    , intersection
+    , intersectionWith
+    
     -- * Traversal
     -- ** Map
     , map

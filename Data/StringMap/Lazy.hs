@@ -83,6 +83,9 @@ module Data.StringMap.Lazy
     , differenceWith
     , differenceWithKey
 
+    -- ** Interset
+    , intersection
+    , intersectionWith
 
     -- * Traversal
     -- ** Map

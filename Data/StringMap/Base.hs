@@ -86,6 +86,9 @@ module Data.StringMap.Base
         , differenceWith
         , differenceWithKey
 
+        -- ** Interset
+        , intersection
+        , intersectionWith
 
         -- * Traversal
         -- ** Map
@@ -738,6 +741,27 @@ diff'' f kf pt1 pt2             = dif (norm pt1) (norm pt2)
         | otherwise                             = branch c1 (diff'' f (kf . (c1:)) s1 s2)   (dif' n1 n2)
     dif _                    _                  = normError "diff''"
 
+-- ----------------------------------------
+
+intersection                     :: StringMap a -> StringMap a -> StringMap a
+intersection t1 t2               = intersectionWith const t1 t2 
+
+intersectionWith                 :: (a -> a -> b) -> StringMap a -> StringMap a -> StringMap b
+intersectionWith f tree1 tree2   = intersection' (norm tree1) (norm tree2)
+    where
+    intersection'' t1' t2'                      = intersection' (norm t1') (norm t2')
+--    intersection' f l r 
+    intersection' Empty _                       = empty
+    intersection' _ Empty                       = empty
+
+    intersection' (Val v1 t1) (Val v2 t2)       = val (f v1 v2) $ intersection'' t1 t2
+    intersection' (Val _ t1) t2@(Branch _ _ _)  = intersection'' t1 t2
+    intersection' t1@(Branch _ _ _) (Val _ t2)  = intersection'' t1 t2
+    intersection' t1@(Branch c1 s1 n1) t2@(Branch c2 s2 n2)
+        | c1 <  c2                           = intersection'' n1 t2
+        | c1 >  c2                           = intersection'' t1 n2
+        | otherwise                          = branch c1 (intersection'' s1 s2) (intersection'' n1 n2)
+    intersection' _                    _        = normError "intersectionWith"
 
 -- ----------------------------------------
 
