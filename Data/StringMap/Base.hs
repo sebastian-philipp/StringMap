@@ -742,15 +742,21 @@ diff'' f kf pt1 pt2             = dif (norm pt1) (norm pt2)
     dif _                    _                  = normError "diff''"
 
 -- ----------------------------------------
+-- | /O(min(n,m))/ intersection is required to allow all major set operations:
+--    AND = intersection
+--    OR = union
+--    AND NOT = difference
 
 intersection                     :: StringMap a -> StringMap a -> StringMap a
-intersection t1 t2               = intersectionWith const t1 t2 
+intersection t1 t2               = intersectionWith const t1 t2
 
-intersectionWith                 :: (a -> a -> b) -> StringMap a -> StringMap a -> StringMap b
+-- | /O(min(n,m))/ intersection with a modification function
+
+intersectionWith                 :: (a -> b -> c) -> StringMap a -> StringMap b -> StringMap c
 intersectionWith f tree1 tree2   = intersection' (norm tree1) (norm tree2)
     where
     intersection'' t1' t2'                      = intersection' (norm t1') (norm t2')
---    intersection' f l r 
+
     intersection' Empty _                       = empty
     intersection' _ Empty                       = empty
 
@@ -758,9 +764,9 @@ intersectionWith f tree1 tree2   = intersection' (norm tree1) (norm tree2)
     intersection' (Val _ t1) t2@(Branch _ _ _)  = intersection'' t1 t2
     intersection' t1@(Branch _ _ _) (Val _ t2)  = intersection'' t1 t2
     intersection' t1@(Branch c1 s1 n1) t2@(Branch c2 s2 n2)
-        | c1 <  c2                           = intersection'' n1 t2
-        | c1 >  c2                           = intersection'' t1 n2
-        | otherwise                          = branch c1 (intersection'' s1 s2) (intersection'' n1 n2)
+        | c1 <  c2                              = intersection'' n1 t2
+        | c1 >  c2                              = intersection'' t1 n2
+        | otherwise                             = branch c1 (intersection'' s1 s2) (intersection'' n1 n2)
     intersection' _                    _        = normError "intersectionWith"
 
 -- ----------------------------------------
