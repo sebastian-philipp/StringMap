@@ -115,10 +115,6 @@ module Data.StringMap
     , fromMap
     , toMap
 
-    -- * Debugging
-    , space
-    , keyChars
-
     -- * Prefix and Fuzzy Search
     , prefixFilter     -- fuzzy search
     , prefixFilterNoCase

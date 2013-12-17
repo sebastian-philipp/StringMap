@@ -118,10 +118,6 @@ module Data.StringMap.Strict
         , fromMap
         , toMap
 
-        -- * Debugging
-        , space
-        , keyChars
-
         -- * Prefix and Fuzzy Search
         , prefixFilter     -- fuzzy search
         , prefixFilterNoCase

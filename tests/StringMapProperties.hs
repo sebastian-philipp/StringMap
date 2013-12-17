@@ -1,13 +1,15 @@
 module Main
 where
 import           Data.StringMap
-
+import           Data.StringMap.Base                  (deepUnNorm)
 
 import qualified Data.Char                            as Char (intToDigit)
 import qualified Data.List                            as List (nubBy, foldl)
 import qualified Data.Map                             as Map (empty, fromList,
                                                               map, toList)
 import qualified Data.Set                             as Set
+import           Data.Size
+
 import           Prelude                              hiding (filter, foldl,
                                                        foldr, lookup, map, null)
 
@@ -73,7 +75,7 @@ main = do
        , testProperty "insert to singleton"  prop_singleton
        , testProperty "map a StringMap" prop_map
        , testProperty "fromList - toList" prop_fromListToList
-       , testProperty "space" prop_space
+       , testProperty "sizeof" prop_sizeof
        , testProperty "prop_range" prop_range
        , testProperty "prop_intersection" prop_intersection
        ]
@@ -330,17 +332,17 @@ test_keyChars = undefined
 
 test_prefixFilter :: Assertion
 test_prefixFilter = do
-  prefixFilter "" (fromList [("a",_4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= fromList [("Ab", 7), ("a",_4), ("aa", 5), ("ab", 2), ("b", 6)]
-  prefixFilter "a" (fromList [("a",_4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= fromList [("a",_4), ("aa", 5), ("ab", 2)]
-  prefixFilter "b" (fromList [("a",_4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= fromList[ ("b", 6)]
-  prefixFilter "c" (fromList [("a",_4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= fromList []
+  deepUnNorm (prefixFilter ""  (fromList [("a",_4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)])) @?= fromList [("Ab", 7), ("a",_4), ("aa", 5), ("ab", 2), ("b", 6)]
+  deepUnNorm (prefixFilter "a" (fromList [("a",_4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)])) @?= fromList [("a",_4), ("aa", 5), ("ab", 2)]
+  deepUnNorm (prefixFilter "b" (fromList [("a",_4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)])) @?= fromList [("b", 6)]
+  deepUnNorm (prefixFilter "c" (fromList [("a",_4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)])) @?= fromList []
 
 test_prefixFilterNoCase :: Assertion
 test_prefixFilterNoCase = do
-  prefixFilterNoCase "" (fromList [("a",_4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= fromList [("Ab", 7), ("a",_4), ("aa", 5), ("ab", 2), ("b", 6)]
-  prefixFilterNoCase "a" (fromList [("a",_4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= fromList [("Ab", 7), ("a",_4), ("aa", 5), ("ab", 2)]
-  prefixFilterNoCase "b" (fromList [("a",_4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= fromList [("b", 6)]
-  prefixFilterNoCase "c" (fromList [("a",_4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)]) @?= fromList []
+  deepUnNorm (prefixFilterNoCase ""  (fromList [("a",_4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)])) @?= fromList [("Ab", 7), ("a",_4), ("aa", 5), ("ab", 2), ("b", 6)]
+  deepUnNorm (prefixFilterNoCase "a" (fromList [("a",_4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)])) @?= fromList [("Ab", 7), ("a",_4), ("aa", 5), ("ab", 2)]
+  deepUnNorm (prefixFilterNoCase "b" (fromList [("a",_4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)])) @?= fromList [("b", 6)]
+  deepUnNorm (prefixFilterNoCase "c" (fromList [("a",_4), ("ab", 2), ("aa", 5), ("b", 6), ("Ab", 7)])) @?= fromList []
 
 test_lookupNoCase :: Assertion
 test_lookupNoCase =  do
@@ -370,9 +372,9 @@ prop_map f l = (toListShortestFirst.(map f).fromList) l `cmpset'` ((Map.toList).
 prop_fromListToList :: [(Key, Int)] -> Bool
 prop_fromListToList l = ((toList.fromList.makeUnique) l) `cmpset'` (makeUnique l)
 
-prop_space :: [(Key, Int)] -> Bool
-prop_space [] = True
-prop_space l = (space.fromList) l >= (space.fromList.tail) l
+prop_sizeof :: [(Key, Int)] -> Bool
+prop_sizeof [] = True
+prop_sizeof l = (dataSize . sizeof . fromList) l >= (dataSize . sizeof . fromList . tail) l
 
 prop_range :: [Key] -> Key -> Key -> Bool
 prop_range l lower' upper' = validInside && validOutside
