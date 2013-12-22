@@ -140,8 +140,8 @@ import           Prelude                  hiding (lookup, map, mapM, null, succ)
 import           Control.Arrow
 import           Control.DeepSeq
 
-import qualified Data.Foldable            as F
 import           Data.Binary
+import qualified Data.Foldable            as F
 import qualified Data.List                as L
 import qualified Data.Map                 as M
 import           Data.Maybe               hiding (mapMaybe)
@@ -1009,16 +1009,16 @@ keys                            = foldWithKey (\ k _v r -> k : r) []
 -- >        takeWhile (not . null) $
 -- >        iterate (concatMap subForest) [t]
 
-toListShortestFirst                        :: StringMap v -> [(Key, v)]
-toListShortestFirst                        = (\ t0 -> [(id, t0)])
-                                  >>>
-                                  iterate (concatMap (second norm >>> uncurry subForest))
-                                  >>>
-                                  takeWhile (not . L.null)
-                                  >>>
-                                  concat
-                                  >>>
-                                  concatMap (second norm >>> uncurry rootLabel)
+toListShortestFirst              :: StringMap v -> [(Key, v)]
+toListShortestFirst              = (\ t0 -> [(id, t0)])
+                                   >>>
+                                   iterate (concatMap (second norm >>> uncurry subForest))
+                                   >>>
+                                   takeWhile (not . L.null)
+                                   >>>
+                                   concat
+                                   >>>
+                                   concatMap (second norm >>> uncurry rootLabel)
 
 rootLabel                       :: (Key -> Key) -> StringMap v -> [(Key, v)]
 rootLabel kf (Val v _)          = [(kf [], v)]
@@ -1149,149 +1149,53 @@ instance (Binary a) => Binary (StringMap a) where
 -- space statistics
 
 instance Sizeable Key1 where
-    sizeof x
+    dataOf x
         = case x of
-            Nil           -> mksize 0
-            (S1 _)        -> mksize 1   -- all the chars are packed into a single word
-            (S2 _ _)      -> mksize 1   --  "   "    "    "    "     "   "   "     "
-            (S3 _ _ _)    -> mksize 1   --  "   "    "    "    "     "   "   "     "
-            (C1 _ k1)     -> mksize 1 <> sizeof k1
-            (C2 _ _ k1)   -> mksize 1 <> sizeof k1
-            (C3 _ _ _ k1) -> mksize 1 <> sizeof k1
+            Nil           -> dataOfSingleton
+            (S1 _)        ->       dataOfChar
+            (S2 _ _)      -> 2 .*. dataOfChar
+            (S3 _ _ _)    -> 3 .*. dataOfChar
+            (C1 _ _k)     ->       dataOfChar <> dataOfPtr
+            (C2 _ _ _k)   -> 2 .*. dataOfChar <> dataOfPtr
+            (C3 _ _ _ _k) -> 3 .*. dataOfChar <> dataOfPtr
 
-    statsof x
+    statsOf x
         = case x of
-            Nil           -> mkstats x "Nil" 0
-            (S1 _)        -> mkstats x "S1"  1
-            (S2 _ _)      -> mkstats x "S2"  1
-            (S3 _ _ _)    -> mkstats x "S3"  1
-            (C1 _ k1)     -> mkstats x "C1"  1 <> statsof k1
-            (C2 _ _ k1)   -> mkstats x "C2"  1 <> statsof k1
-            (C3 _ _ _ k1) -> mkstats x "C3"  1 <> statsof k1
+            Nil           -> constrStats "Nil" x
+            (S1 _)        -> constrStats "S1"  x
+            (S2 _ _)      -> constrStats "S2"  x
+            (S3 _ _ _)    -> constrStats "S3"  x
+            (C1 _ k1)     -> constrStats "C1"  x <> statsOf k1
+            (C2 _ _ k1)   -> constrStats "C2"  x <> statsOf k1
+            (C3 _ _ _ k1) -> constrStats "C3"  x <> statsOf k1
 
 instance Sizeable v => Sizeable (StringMap v) where
-    sizeof x
+    dataOf x
         = case x of
-            Empty          -> mksize 0
-            (Val v t)      -> mksize 2 <> sizeof v <> sizeof t
-            (Branch _ c n) -> mksize 3 <> sizeof c <> sizeof n
-            (Leaf v)       -> mksize 1 <> sizeof v
-            (Last _ c)     -> mksize 2 <> sizeof c
-            (LsSeq k c)    -> mksize 2 <> sizeof k <> sizeof c
-            (BrSeq k c n)  -> mksize 3 <> sizeof k <> sizeof c <> sizeof n
-            (LsSeL k v)    -> mksize 2 <> sizeof k <> sizeof v
-            (BrSeL k v n)  -> mksize 3 <> sizeof k <> sizeof v <> sizeof n
-            (BrVal _ v n)  -> mksize 3 <> sizeof v <> sizeof n
-            (LsVal _ v)    -> mksize 2 <> sizeof v
+            Empty          -> dataOfSingleton
+            (Val      _v _t) ->               2 .*. dataOfPtr
+            (Branch _ _c _n) -> dataOfChar <> 2 .*. dataOfPtr
+            (Leaf     _v   ) ->                     dataOfPtr
+            (Last  _  _c   ) -> dataOfChar <>       dataOfPtr
+            (LsSeq _k _c   ) ->               2 .*. dataOfPtr
+            (BrSeq _k _c _n) ->               3 .*. dataOfPtr
+            (LsSeL _k _v   ) ->               2 .*. dataOfPtr
+            (BrSeL _k _v _n) ->               3 .*. dataOfPtr
+            (BrVal _  _v _n) -> dataOfChar <> 2 .*. dataOfPtr
+            (LsVal _  _v   ) -> dataOfChar <>       dataOfPtr
 
-    statsof x
+    statsOf x
         = case x of
-            Empty          -> mkstats x "Empty"  0
-            (Val v t)      -> mkstats x "Val"    2 <> statsof v <> statsof t
-            (Branch _ c n) -> mkstats x "Branch" 3 <> statsof c <> statsof n
-            (Leaf v)       -> mkstats x "Leaf"   1 <> statsof v
-            (Last _ c)     -> mkstats x "Last"   2 <> statsof c
-            (LsSeq k c)    -> mkstats x "LsSeq"  2 <> statsof k <> statsof c
-            (BrSeq k c n)  -> mkstats x "BrSeq"  3 <> statsof k <> statsof c <> statsof n
-            (LsSeL k v)    -> mkstats x "LsSeL"  2 <> statsof k <> statsof v
-            (BrSeL k v n)  -> mkstats x "BrSeL"  3 <> statsof k <> statsof v <> statsof n
-            (BrVal _ v n)  -> mkstats x "BrVal"  3 <> statsof v <> statsof n
-            (LsVal _ v)    -> mkstats x "LsVal"  2 <> statsof v
+            Empty          -> constrStats "Empty"  x
+            (Val v t)      -> constrStats "Val"    x <> statsOf v <> statsOf t
+            (Branch _ c n) -> constrStats "Branch" x <> statsOf c <> statsOf n
+            (Leaf v)       -> constrStats "Leaf"   x <> statsOf v
+            (Last _ c)     -> constrStats "Last"   x <> statsOf c
+            (LsSeq k c)    -> constrStats "LsSeq"  x <> statsOf k <> statsOf c
+            (BrSeq k c n)  -> constrStats "BrSeq"  x <> statsOf k <> statsOf c <> statsOf n
+            (LsSeL k v)    -> constrStats "LsSeL"  x <> statsOf k <> statsOf v
+            (BrSeL k v n)  -> constrStats "BrSeL"  x <> statsOf k <> statsOf v <> statsOf n
+            (BrVal _ v n)  -> constrStats "BrVal"  x <> statsOf v <> statsOf n
+            (LsVal _ v)    -> constrStats "LsVal"  x <> statsOf v
 
--- ----------------------------------------
-
-{- old version of object and space profiling, sizeof and statsof will do that more general
---
--- | space required by a prefix tree (logically)
---
--- Singletons are counted as 0, all other n-ary constructors
--- are counted as n+1 (1 for the constructor and 1 for every field)
--- cons nodes of char lists are counted 2, 1 for the cons, 1 for the char
--- for values only the ref to the value is counted, not the space for the value itself
--- key chars are assumed to be unboxed
-
-space                   :: StringMap a -> Int
-space                   = visit $
-                          PTV
-                          { v_empty             = 0
-                          , v_val               = const (3 +)
-                          , v_branch            = const $ \ s n -> 4 + s + n
-                          , v_leaf              = const 2
-                          , v_last              = const (3 +)
-                          , v_lsseq             = \ cs s   ->     space1 cs + s
-                          , v_brseq             = \ cs s n -> 4 + space1 cs + s + n
-                          , v_lssel             = \ cs _   -> 3 + space1 cs
-                          , v_brsel             = \ cs _ n -> 4 + space1 cs     + n
-                          , v_lsval             = \ _  _   -> 3
-                          , v_brval             = \ _  _ n -> 4                 + n
-                          }
-
-keyChars                :: StringMap a -> Int
-keyChars                = visit $
-                          PTV
-                          { v_empty             = 0
-                          , v_val               = \ _  t   -> t
-                          , v_branch            = \ _  s n -> 1 + s + n
-                          , v_leaf              = \ _      -> 0
-                          , v_last              = \ _  s   -> 1 + s
-                          , v_lsseq             = \ cs s   -> length1 cs + s
-                          , v_brseq             = \ cs s n -> length1 cs + s + n
-                          , v_lssel             = \ cs _   -> length1 cs
-                          , v_brsel             = \ cs _ n -> length1 cs     + n
-                          , v_lsval             = \ _  _   -> 1
-                          , v_brval             = \ _  _ n -> 1             + n
-                          }
-
--- ----------------------------------------
---
--- | statistics about the # of different nodes in an optimized prefix tree
-
-stat                    :: StringMap a -> StringMap Int
-stat                    =  visit $
-                          PTV
-                          { v_empty             =             singleton "empty"  1
-                          , v_val               = \ _  t   -> singleton "val"    1
-                                                              `add` t
-                          , v_branch            = \ _  s n -> singleton "branch" 1
-                                                              `add` (s `add` n)
-                          , v_leaf              = \ _      -> singleton "leaf"   1
-                          , v_last              = \ _  s   -> singleton "last"   1
-                                                              `add` s
-                          , v_lsseq             = \ cs s   -> singleton (show' "lsseq" cs) 1
-                                                              `add` singleton "size-key1" (length1 cs)
-                                                              `add` singleton "space-key1" (space1 cs)
-                                                              `add` s
-                          , v_brseq             = \ cs s n -> singleton (show' "brseq" cs) 1
-                                                              `add` singleton "size-key1" (length1 cs)
-                                                              `add` singleton "space-key1" (space1 cs)
-                                                              `add` (s `add` n)
-                          , v_lssel             = \ cs _   -> singleton (show' "lssel" cs) 1
-                                                              `add` singleton "size-key1" (length1 cs)
-                                                              `add` singleton "space-key1" (space1 cs)
-                          , v_brsel             = \ cs _ n -> singleton (show' "brseq" cs) 1
-                                                              `add` singleton "size-key1" (length1 cs)
-                                                              `add` singleton "space-key1" (space1 cs)
-                                                              `add` n
-                          , v_lsval             = \ _  _   -> singleton "lsval" 1
-                          , v_brval             = \ _  _ n -> singleton "brval" 1
-                                                              `add`          n
-                          }
-    where
-    add                 = unionWith (+)
-    show' c k1          = c ++ "-" ++ show (length1 k1)
-
-
-length1                 :: Key1 -> Int
-length1                 = length . toKey
-
-space1                  :: Key1 -> Int
-space1 Nil              = 0
-space1 (S1 _)           = 2
-space1 (S2 _ _)         = 3
-space1 (S3 _ _ _)       = 4
-space1 (C1 _ k1)        = 3 + space1 k1
-space1 (C2 _ _ k1)      = 4 + space1 k1
-space1 (C3 _ _ _ k1)    = 5 + space1 k1
-
--- -}
 -- ----------------------------------------
