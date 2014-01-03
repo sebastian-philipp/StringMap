@@ -587,6 +587,8 @@ prefixFind k                    = elems . lookupPx' k
 prefixFindWithKey               :: Key -> StringMap a -> [(Key, a)]
 prefixFindWithKey k             = fmap (first (k ++)) . toList . lookupPx' k
 
+{-# DEPRECATED prefixFindWithKey "use @toList . prefixFilter@ instead" #-}
+
 -- ----------------------------------------
 
 insert'                         :: (a -> a -> a) -> a -> Key -> StringMap a -> StringMap a
@@ -1037,6 +1039,8 @@ subForest _  _                  = error "StringMap.Base.subForest: Pattern match
 
 prefixFindWithKeyBF             :: Key -> StringMap a -> [(Key, a)]
 prefixFindWithKeyBF k           = fmap (first (k ++)) . toListShortestFirst . lookupPx' k
+
+{-# DEPRECATED prefixFindWithKeyBF "use @toListShortestFirst . prefixFilter@ instead" #-}
 
 -- ----------------------------------------
 
