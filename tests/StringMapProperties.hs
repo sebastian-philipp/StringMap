@@ -374,7 +374,7 @@ prop_fromListToList l = ((toList.fromList.makeUnique) l) `cmpset'` (makeUnique l
 
 prop_sizeof :: [(Key, Int)] -> Bool
 prop_sizeof [] = True
-prop_sizeof l = (dataSize . sizeof . fromList) l >= (dataSize . sizeof . fromList . tail) l
+prop_sizeof l = (dataSize . objectsOf . fromList) l >= (dataSize . objectsOf . fromList . tail) l
 
 prop_range :: [Key] -> Key -> Key -> Bool
 prop_range l lower' upper' = validInside && validOutside

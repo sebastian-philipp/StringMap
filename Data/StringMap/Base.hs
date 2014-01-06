@@ -208,11 +208,14 @@ data Key1               = Nil
                         | S1 {-# UNPACK #-} ! Sym
                         | S2 {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym
                         | S3 {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym
+                        | S4 {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym
                         | C1 {-# UNPACK #-} ! Sym
                                             ! Key1
                         | C2 {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym
                                             ! Key1
                         | C3 {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym
+                                            ! Key1
+                        | C4 {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym
                                             ! Key1
                           deriving (Eq, Ord, Typeable)
 
@@ -221,51 +224,57 @@ instance Show Key1 where
 
 mk1                     :: Sym -> Key1
 mk1 s1                  = S1 s1
--- mk1 s1                  = C1 s1 Nil
 
 mk2                     :: Sym -> Sym -> Key1
 mk2 s1 s2               = S2 s1 s2
--- mk2 s1 s2               = C1 s1 (mk1 s2)
--- mk2 s1 s2               = C1 s1 (C1 s2 Nil)
 
 mk3                     :: Sym -> Sym -> Sym -> Key1
 mk3 s1 s2 s3            = S3 s1 s2 s3
 
-cons1                   :: Sym -> Key1 -> Key1
-cons1 s Nil             = mk1 s
-cons1 s (S1 s2)         = mk2 s s2
-cons1 s (S2 s2 s3)      = mk3 s s2 s3
-cons1 s (C1 s2 k2)      = C2 s s2 k2
-cons1 s (C2 s2 s3 k3)   = C3 s s2 s3 k3
-cons1 s k               = C1 s    k
+mk4                     :: Sym -> Sym -> Sym -> Sym -> Key1
+mk4 s1 s2 s3 s4         = S4 s1 s2 s3 s4
 
-uncons1                 :: Key1 -> (Sym, Key1)
-uncons1 (S1 s)          = (s, Nil)
-uncons1 (S2 s s2)       = (s, mk1 s2)
-uncons1 (S3 s s2 s3)    = (s, mk2 s2 s3)
-uncons1 (C1 s k1)       = (s, k1)
-uncons1 (C2 s s2 k1)    = (s, C1 s2 k1)
-uncons1 (C3 s s2 s3 k1) = (s, C2 s2 s3 k1)
-uncons1 Nil             = error "uncons1 with Nil"
+cons1                           :: Sym -> Key1 -> Key1
+cons1 s Nil                     = mk1 s
+cons1 s (S1 s2)                 = mk2 s s2
+cons1 s (S2 s2 s3)              = mk3 s s2 s3
+cons1 s (S3 s2 s3 s4)           = mk4 s s2 s3 s4
+cons1 s (C1 s2 k2)              = C2 s s2 k2
+cons1 s (C2 s2 s3 k3)           = C3 s s2 s3 k3
+cons1 s (C3 s2 s3 s4 k4)        = C4 s s2 s3 s4 k4
+cons1 s k                       = C1 s    k
+
+uncons1                         :: Key1 -> (Sym, Key1)
+uncons1 (S1 s)                  = (s, Nil)
+uncons1 (S2 s s2)               = (s, mk1 s2)
+uncons1 (S3 s s2 s3)            = (s, mk2 s2 s3)
+uncons1 (S4 s s2 s3 s4)         = (s, mk3 s2 s3 s4)
+uncons1 (C1 s k1)               = (s, k1)
+uncons1 (C2 s s2 k1)            = (s, C1 s2 k1)
+uncons1 (C3 s s2 s3 k1)         = (s, C2 s2 s3 k1)
+uncons1 (C4 s s2 s3 s4 k1)      = (s, C3 s2 s3 s4 k1)
+uncons1 Nil                     = error "uncons1 with Nil"
 
 {-# INLINE mk1 #-}
 {-# INLINE mk2 #-}
 {-# INLINE mk3 #-}
+{-# INLINE mk4 #-}
 {-# INLINE cons1 #-}
 {-# INLINE uncons1 #-}
 
+toKey                           :: Key1 -> Key
+toKey (S2 s1 s2      )          = s1 : s2           : []
+toKey (S3 s1 s2 s3   )          = s1 : s2 : s3      : []
+toKey (S4 s1 s2 s3 s4)          = s1 : s2 : s3 : s4 : []
+toKey (S1 s1         )          = s1                : []
+toKey (C1 s1          k)        = s1                : toKey k
+toKey (C2 s1 s2       k)        = s1 : s2           : toKey k
+toKey (C3 s1 s2 s3    k)        = s1 : s2 : s3      : toKey k
+toKey (C4 s1 s2 s3 s4 k)        = s1 : s2 : s3 : s4 : toKey k
+toKey Nil                       = []
 
-toKey                   :: Key1 -> Key
-toKey (C3 s1 s2 s3 k)   = s1 : s2 : s3 : toKey k
-toKey (C2 s1 s2    k)   = s1 : s2      : toKey k
-toKey (C1 s1       k)   = s1           : toKey k
-toKey (S3 s1 s2 s3)     = s1 : s2 : s3 : []
-toKey (S2 s1 s2   )     = s1 : s2      : []
-toKey (S1 s1      )     = s1           : []
-toKey Nil               = []
-
-fromKey                 :: Key -> Key1
-fromKey k1               = foldr cons1 Nil k1
+fromKey                         :: Key -> Key1
+fromKey k1                      = foldr cons1 Nil k1
 
 -- ----------------------------------------
 
@@ -1155,28 +1164,32 @@ instance (Binary a) => Binary (StringMap a) where
 instance Sizeable Key1 where
     dataOf x
         = case x of
-            Nil           -> dataOfSingleton
-            (S1 _)        ->       dataOfChar
-            (S2 _ _)      -> 2 .*. dataOfChar
-            (S3 _ _ _)    -> 3 .*. dataOfChar
-            (C1 _ _k)     ->       dataOfChar <> dataOfPtr
-            (C2 _ _ _k)   -> 2 .*. dataOfChar <> dataOfPtr
-            (C3 _ _ _ _k) -> 3 .*. dataOfChar <> dataOfPtr
+            Nil             -> dataOfSingleton
+            (S1 _)          ->       dataOfChar
+            (S2 _ _)        -> 2 .*. dataOfChar
+            (S3 _ _ _)      -> 3 .*. dataOfChar
+            (S4 _ _ _ _)    -> 4 .*. dataOfChar
+            (C1 _ _k)       ->       dataOfChar <> dataOfPtr
+            (C2 _ _ _k)     -> 2 .*. dataOfChar <> dataOfPtr
+            (C3 _ _ _ _k)   -> 3 .*. dataOfChar <> dataOfPtr
+            (C4 _ _ _ _ _k) -> 4 .*. dataOfChar <> dataOfPtr
 
     statsOf x
         = case x of
-            Nil           -> constrStats "Nil" x
-            (S1 _)        -> constrStats "S1"  x
-            (S2 _ _)      -> constrStats "S2"  x
-            (S3 _ _ _)    -> constrStats "S3"  x
-            (C1 _ k1)     -> constrStats "C1"  x <> statsOf k1
-            (C2 _ _ k1)   -> constrStats "C2"  x <> statsOf k1
-            (C3 _ _ _ k1) -> constrStats "C3"  x <> statsOf k1
+            Nil             -> constrStats "Nil" x
+            (S1 _)          -> constrStats "S1"  x
+            (S2 _ _)        -> constrStats "S2"  x
+            (S3 _ _ _)      -> constrStats "S3"  x
+            (S4 _ _ _ _)    -> constrStats "S4"  x
+            (C1 _ k1)       -> constrStats "C1"  x <> statsOf k1
+            (C2 _ _ k1)     -> constrStats "C2"  x <> statsOf k1
+            (C3 _ _ _ k1)   -> constrStats "C3"  x <> statsOf k1
+            (C4 _ _ _ _ k1) -> constrStats "C4"  x <> statsOf k1
 
 instance Sizeable v => Sizeable (StringMap v) where
     dataOf x
         = case x of
-            Empty          -> dataOfSingleton
+            Empty            -> dataOfSingleton
             (Val      _v _t) ->               2 .*. dataOfPtr
             (Branch _ _c _n) -> dataOfChar <> 2 .*. dataOfPtr
             (Leaf     _v   ) ->                     dataOfPtr
