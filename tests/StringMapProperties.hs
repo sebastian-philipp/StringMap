@@ -159,17 +159,21 @@ test_prefixFind = do
 
 test_prefixFindWithKey :: Assertion
 test_prefixFindWithKey = do
-  prefixFindWithKey "a" (fromList [("a",_1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]) `cmpset`  [("a",_1), ("ab", 2), ("aaa", 4)]
-  prefixFindWithKey "" (fromList [("a",_1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]) `cmpset`  [("a",_1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]
-  prefixFindWithKey "foo" (fromList [("a",_1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]) @?= []
-  prefixFindWithKey "" (empty :: UMap) @?= []
+  prefixFindWithKey' "a" (fromList [("a",_1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]) `cmpset`  [("a",_1), ("ab", 2), ("aaa", 4)]
+  prefixFindWithKey' "" (fromList [("a",_1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]) `cmpset`  [("a",_1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]
+  prefixFindWithKey' "foo" (fromList [("a",_1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]) @?= []
+  prefixFindWithKey' "" (empty :: UMap) @?= []
+ where
+  prefixFindWithKey' k = toList . prefixFilter k
 
 test_prefixFindWithKeyBF :: Assertion
 test_prefixFindWithKeyBF = do
-  prefixFindWithKeyBF "a" (fromList [("a",_1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]) @?= [("a",_1), ("ab", 2), ("aaa", 4)]
-  prefixFindWithKeyBF "" (fromList [("a",_1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]) @?=  [("a",_1), ("b", 5), ("ab", 2), ("aaa", 4), ("cab", 3)]
-  prefixFindWithKeyBF "foo" (fromList [("a",_1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]) @?= []
-  prefixFindWithKeyBF "" (empty :: UMap) @?= []
+  prefixFindWithKeyBF' "a" (fromList [("a",_1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]) @?= [("a",_1), ("ab", 2), ("aaa", 4)]
+  prefixFindWithKeyBF' "" (fromList [("a",_1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]) @?=  [("a",_1), ("b", 5), ("ab", 2), ("aaa", 4), ("cab", 3)]
+  prefixFindWithKeyBF' "foo" (fromList [("a",_1), ("ab", 2), ("cab", 3), ("aaa", 4), ("b", 5)]) @?= []
+  prefixFindWithKeyBF' "" (empty :: UMap) @?= []
+ where
+  prefixFindWithKeyBF' k = toListShortestFirst . prefixFilter k
 
 test_empty :: Assertion
 test_empty = do
