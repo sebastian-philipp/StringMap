@@ -56,8 +56,8 @@ main = do
        , testCase "mapMaybe" test_mapMaybe
        -- , testCase "mapM" test_mapM
        -- , testCase "mapWithKeyM" test_mapWithKeyM
-       , testCase "fold" test_fold
-       , testCase "foldWithKey" test_foldWithKey
+       , testCase "foldr" test_foldr
+       , testCase "foldrWithKey" test_foldrWithKey
        , testCase "keys" test_keys
        , testCase "elems" test_elems
        , testCase "fromList" test_fromList
@@ -279,15 +279,13 @@ test_mapM = undefined
 test_mapWithKeyM :: Assertion
 test_mapWithKeyM = undefined
 
-test_fold :: Assertion
-test_fold = do
-  fold (\ l r -> (Char.intToDigit $ fromIntegral l) : r) "0" (fromList [("a",_4), ("ab", 2), ("aa", 5), ("b", 6)]) @?= "45260"
-  error "In Which Order?"
+test_foldr :: Assertion
+test_foldr = do
+  foldr (\ l r -> (Char.intToDigit $ fromIntegral l) : r) "0" (fromList [("a",_4), ("ab", 2), ("aa", 5), ("b", 6)]) @?= "45260"
 
-test_foldWithKey :: Assertion
-test_foldWithKey = do
-  foldWithKey f "0" (fromList [("a",_4), ("ab", 2), ("aa", 5), ("b", 6)]) @?= "a:4|aa:5|ab:2|b:6|0"
-  error "In Which Order?"
+test_foldrWithKey :: Assertion
+test_foldrWithKey = do
+  foldrWithKey f "0" (fromList [("a",_4), ("ab", 2), ("aa", 5), ("b", 6)]) @?= "a:4|aa:5|ab:2|b:6|0"
     where
       f k l = mergeString k [Char.intToDigit $ fromIntegral l]
 

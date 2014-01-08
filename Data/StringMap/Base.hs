@@ -103,6 +103,8 @@ module Data.StringMap.Base
         -- * Folds
         , fold
         , foldWithKey
+        , foldr
+        , foldrWithKey
 
         -- * Conversion
         , keys
@@ -135,7 +137,7 @@ module Data.StringMap.Base
         )
 where
 
-import           Prelude                  hiding (lookup, map, mapM, null, succ)
+import           Prelude                  hiding (foldr, lookup, map, mapM, null, succ)
 
 import           Control.Arrow
 import           Control.DeepSeq
@@ -274,7 +276,7 @@ toKey (C4 s1 s2 s3 s4 k)        = s1 : s2 : s3 : s4 : toKey k
 toKey Nil                       = []
 
 fromKey                         :: Key -> Key1
-fromKey k1                      = foldr cons1 Nil k1
+fromKey k1                      = L.foldr cons1 Nil k1
 
 -- ----------------------------------------
 
@@ -944,12 +946,23 @@ visit v (BrVal c  v' n) = v_brval  v c  v'          (visit v n)
 foldWithKey                     :: (Key -> a -> b -> b) -> b -> StringMap a -> b
 foldWithKey f e                 = fold' f e id
 
-{-# INLINE foldWithKey #-}
+{-# DEPRECATED foldWithKey "use @foldrWithKey@ instead" #-}
+
+foldrWithKey                     :: (Key -> a -> b -> b) -> b -> StringMap a -> b
+foldrWithKey f e                 = fold' f e id
+
+{-# INLINE foldrWithKey #-}
+
 
 -- | /O(n)/ Fold over all values in the map.
 
 fold :: (a -> b -> b) -> b -> StringMap a -> b
 fold f = foldWithKey $ const f
+
+{-# DEPRECATED fold "use @foldr@ instead" #-}
+
+foldr :: (a -> b -> b) -> b -> StringMap a -> b
+foldr f = foldrWithKey $ const f
 
 {-# INLINE fold #-}
 

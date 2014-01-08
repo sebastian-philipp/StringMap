@@ -101,6 +101,8 @@ module Data.StringMap
     -- * Folds
     , fold
     , foldWithKey
+    , foldr
+    , foldrWithKey
 
     -- * Conversion
     , keys
@@ -122,7 +124,7 @@ module Data.StringMap
     )
 where
 
-import           Prelude                    hiding (lookup, map, mapM, null,
+import           Prelude                    hiding (foldr, lookup, map, mapM, null,
                                              succ)
 
 import           Data.StringMap.Base
