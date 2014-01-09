@@ -813,14 +813,20 @@ cutPx'' cf s1' t2'              = cut s1' (norm t2')
         | otherwise                             = branch c1 (cutPx'' cf s1 s2) (cutPx'' cf n1 n2)
     cut _                    _                  = normError "cutPx''"
 
+{-# INLINE cutPx'' #-}
+
 cutPx'                          :: StringSet -> StringMap a -> StringMap a
 cutPx'                          = cutPx'' id
+
+{-# INLINE cutPx' #-}
 
 cutAllPx'                       :: StringSet -> StringMap a -> StringMap a
 cutAllPx'                       = cutPx'' (cv . norm)
     where
     cv (Val v _)                = val v empty
     cv _                        = empty
+
+{-# INLINE cutAllPx' #-}
 
 -- ----------------------------------------
 
@@ -829,23 +835,33 @@ cutAllPx'                       = cutPx'' (cv . norm)
 map                             :: (a -> b) -> StringMap a -> StringMap b
 map f                           = mapWithKey (const f)
 
+{-# INLINE map #-}
 
 mapWithKey                      :: (Key -> a -> b) -> StringMap a -> StringMap b
 mapWithKey f                    = map' f id
 
+{-# INLINE mapWithKey #-}
 
 map'                            :: (Key -> a -> b) -> (Key -> Key) -> StringMap a -> StringMap b
-map' _ _ (Empty)                = Empty
-map' f k (Val v t)              = Val       (f (k []) v)             (map' f k t)
-map' f k (Branch c s n)         = Branch c  (map' f ((c :) . k)   s) (map' f k n)
-map' f k (Leaf v)               = Leaf      (f (k []) v)
-map' f k (Last c s)             = Last   c  (map' f ((c :)   . k) s)
-map' f k (LsSeq cs s)           = LsSeq  cs (map' f ((toKey cs ++) . k) s)
-map' f k (BrSeq cs s n)         = BrSeq  cs (map' f ((toKey cs ++) . k) s) (map' f k n)
-map' f k (LsSeL cs v)           = LsSeL  cs (f (k []) v)
-map' f k (BrSeL cs v n)         = BrSeL  cs (f (k []) v)             (map' f k n)
-map' f k (LsVal c  v)           = LsVal  c  (f (k []) v)
-map' f k (BrVal c  v n)         = BrVal  c  (f (k []) v)             (map' f k n)
+map' f                          = mp'
+    where
+    mp' k                       = mp
+        where
+        f'                      = f (k [])
+
+        mp (Empty)              = Empty
+        mp (Val v t)            = Val       (f' v)                      (mp t)
+        mp (Branch c s n)       = Branch c  (mp' ((c :) . k)   s)       (mp n)
+        mp (Leaf v)             = Leaf      (f' v)
+        mp (Last c s)           = Last   c  (mp' ((c :)   . k) s)
+        mp (LsSeq cs s)         = LsSeq  cs (mp' ((toKey cs ++) . k) s)
+        mp (BrSeq cs s n)       = BrSeq  cs (mp' ((toKey cs ++) . k) s) (mp n)
+        mp (LsSeL cs v)         = LsSeL  cs (f' v)
+        mp (BrSeL cs v n)       = BrSeL  cs (f' v)                      (mp n)
+        mp (LsVal c  v)         = LsVal  c  (f' v)
+        mp (BrVal c  v n)       = BrVal  c  (f' v)                      (mp n)
+
+{-# INLINE map' #-}
 
 -- | /O(n)/ Updates a value or deletes the element if the result of the updating function is 'Nothing'.
 
@@ -863,6 +879,8 @@ mapMaybe' f                     = upd . norm
     upd (Val v' t')             = maybe t (flip val t) $ f v'
         where t = upd' t'
     upd _                       = normError "update'"
+
+{-# INLINE mapMaybe' #-}
 
 -- ----------------------------------------
 {- not yet used
@@ -982,6 +1000,8 @@ rfold' f r k0                   = fo k0 . norm
     fo kf (Val v' t')           = let r' = rfold' f r kf t' in f (kf []) v' r'
     fo _  _                     = normError "rfold'"
 
+{-# INLINE rfold' #-}
+
 -- | /O(n)/ Left fold over all values in the map.
 
 foldl                           :: (b -> a -> b) -> b -> StringMap a -> b
@@ -1004,6 +1024,7 @@ lfold' f r k0                   = fo k0 . norm
     fo kf (Val v' t')           = let r' = f r (kf []) v' in lfold' f r' kf t'
     fo _  _                     = normError "lfold'"
 
+{-# INLINE lfold' #-}
 
 {- not yet used
 
