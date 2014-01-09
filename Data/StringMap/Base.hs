@@ -103,6 +103,8 @@ module Data.StringMap.Base
         -- * Folds
         , fold
         , foldWithKey
+        , foldl
+        , foldlWithKey
         , foldr
         , foldrWithKey
 
@@ -137,7 +139,7 @@ module Data.StringMap.Base
         )
 where
 
-import           Prelude                  hiding (foldr, lookup, map, mapM, null, succ)
+import           Prelude                  hiding (foldl, foldr, lookup, map, mapM, null, succ)
 
 import           Control.Arrow
 import           Control.DeepSeq
@@ -944,27 +946,62 @@ visit v (BrVal c  v' n) = v_brval  v c  v'          (visit v n)
 -- | /O(n)/ Fold over all key\/value pairs in the map.
 
 foldWithKey                     :: (Key -> a -> b -> b) -> b -> StringMap a -> b
-foldWithKey f e                 = fold' f e id
+foldWithKey f e                 = rfold' f e id
 
 {-# DEPRECATED foldWithKey "use @foldrWithKey@ instead" #-}
 
-foldrWithKey                     :: (Key -> a -> b -> b) -> b -> StringMap a -> b
-foldrWithKey f e                 = fold' f e id
+-- | /O(n)/ Right fold over all keys and values in the map.
+
+foldrWithKey                    :: (Key -> a -> b -> b) -> b -> StringMap a -> b
+foldrWithKey f e                = rfold' f e id
 
 {-# INLINE foldrWithKey #-}
 
 
 -- | /O(n)/ Fold over all values in the map.
 
-fold :: (a -> b -> b) -> b -> StringMap a -> b
-fold f = foldWithKey $ const f
+fold                            :: (a -> b -> b) -> b -> StringMap a -> b
+fold f                          = foldWithKey $ const f
 
 {-# DEPRECATED fold "use @foldr@ instead" #-}
 
-foldr :: (a -> b -> b) -> b -> StringMap a -> b
+-- | /O(n)/ Right fold over all values in the map.
+
+foldr                           :: (a -> b -> b) -> b -> StringMap a -> b
 foldr f = foldrWithKey $ const f
 
-{-# INLINE fold #-}
+{-# INLINE foldr #-}
+
+rfold'                          :: (Key -> a -> b -> b) -> b -> (Key -> Key) -> StringMap a -> b
+rfold' f r k0                   = fo k0 . norm
+    where
+    fo kf (Branch c' s' n')     = let r' = rfold' f r kf n' in rfold' f r' (kf . (c':)) s'
+    fo _  (Empty)               = r
+    fo kf (Val v' t')           = let r' = rfold' f r kf t' in f (kf []) v' r'
+    fo _  _                     = normError "rfold'"
+
+-- | /O(n)/ Left fold over all values in the map.
+
+foldl                           :: (b -> a -> b) -> b -> StringMap a -> b
+foldl f                         = foldlWithKey $ \ x -> const (f x)
+
+{-# INLINE foldl #-}
+
+-- | /O(n)/ Left fold over all keys and values in the map.
+
+foldlWithKey                    :: (b -> Key -> a -> b) -> b -> StringMap a -> b
+foldlWithKey f e                = lfold' f e id
+
+{-# INLINE foldlWithKey #-}
+
+lfold'                          :: (b -> Key -> a -> b) -> b -> (Key -> Key) -> StringMap a -> b
+lfold' f r k0                   = fo k0 . norm
+    where
+    fo kf (Branch c' s' n')     = let r' = lfold' f r (kf . (c':)) s' in lfold' f r' kf n'
+    fo _  (Empty)               = r
+    fo kf (Val v' t')           = let r' = f r (kf []) v' in lfold' f r' kf t'
+    fo _  _                     = normError "lfold'"
+
 
 {- not yet used
 
@@ -976,14 +1013,6 @@ foldTopDown f r k0              = fo k0 . norm
     fo kf (Val v' t')           = let r' = f (kf []) v' r                   in foldTopDown f r' kf t'
     fo _  _                     = normError "foldTopDown"
 -- -}
-
-fold'                           :: (Key -> a -> b -> b) -> b -> (Key -> Key) -> StringMap a -> b
-fold' f r k0                    = fo k0 . norm
-    where
-    fo kf (Branch c' s' n')     = let r' = fold' f r kf n' in fold' f r' (kf . (c':)) s'
-    fo _  (Empty)               = r
-    fo kf (Val v' t')           = let r' = fold' f r kf t' in f (kf []) v' r'
-    fo _  _                     = normError "fold'"
 
 -- | /O(n)/ Convert into an ordinary map.
 

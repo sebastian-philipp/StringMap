@@ -56,6 +56,8 @@ main = do
        , testCase "mapMaybe" test_mapMaybe
        -- , testCase "mapM" test_mapM
        -- , testCase "mapWithKeyM" test_mapWithKeyM
+       , testCase "foldl" test_foldl
+       , testCase "foldlWithKey" test_foldlWithKey
        , testCase "foldr" test_foldr
        , testCase "foldrWithKey" test_foldrWithKey
        , testCase "keys" test_keys
@@ -279,9 +281,17 @@ test_mapM = undefined
 test_mapWithKeyM :: Assertion
 test_mapWithKeyM = undefined
 
+test_foldl :: Assertion
+test_foldl = do
+  foldl (\ r l -> '(' : r  ++ [(Char.intToDigit $ fromIntegral l)] ++ ")") "()" (fromList [("a",_4), ("ab", 2), ("aa", 5), ("b", 6)]) @?= "((((()4)5)2)6)"
+
+test_foldlWithKey :: Assertion
+test_foldlWithKey = do
+  foldlWithKey (\ r k l -> '(' : r  ++ k ++ ':' : [(Char.intToDigit $ fromIntegral l)] ++ ")") "()" (fromList [("a",_4), ("ab", 2), ("aa", 5), ("b", 6)]) @?= "((((()a:4)aa:5)ab:2)b:6)"
+
 test_foldr :: Assertion
 test_foldr = do
-  foldr (\ l r -> (Char.intToDigit $ fromIntegral l) : r) "0" (fromList [("a",_4), ("ab", 2), ("aa", 5), ("b", 6)]) @?= "45260"
+  foldr (\ l r -> '(' : (Char.intToDigit $ fromIntegral l) : r ++ ")") "()" (fromList [("a",_4), ("ab", 2), ("aa", 5), ("b", 6)]) @?= "(4(5(2(6()))))"
 
 test_foldrWithKey :: Assertion
 test_foldrWithKey = do
