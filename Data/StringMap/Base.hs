@@ -141,6 +141,7 @@ where
 
 import           Prelude                  hiding (foldl, foldr, lookup, map, mapM, null, succ)
 
+import           Control.Applicative      ((<$>), (<*>), pure)
 import           Control.Arrow
 import           Control.DeepSeq
 
@@ -152,6 +153,7 @@ import           Data.Maybe               hiding (mapMaybe)
 import           Data.Size
 import           Data.StringMap.StringSet
 import           Data.StringMap.Types
+import qualified Data.Traversable         as T
 import           Data.Typeable
 
 -- ----------------------------------------
@@ -1100,6 +1102,19 @@ instance Functor StringMap where
 
 instance F.Foldable StringMap where
   foldr = fold
+
+instance T.Traversable StringMap where
+    traverse _ (Empty)         = pure Empty
+    traverse f (Val    v t)    = Val      <$> f v            <*> T.traverse f t
+    traverse f (Branch c s n)  = Branch c <$> T.traverse f s <*> T.traverse f n
+    traverse f (Leaf   v)      = Leaf     <$> f v
+    traverse f (Last   c  s)   = Last   c <$> T.traverse f s
+    traverse f (LsSeq  ks s)   = LsSeq ks <$> T.traverse f s
+    traverse f (BrSeq  ks s n) = BrSeq ks <$> T.traverse f s <*> T.traverse f n
+    traverse f (LsSeL  ks v)   = LsSeL ks <$> f v
+    traverse f (BrSeL  ks v n) = BrSeL ks <$> f v            <*> T.traverse f n
+    traverse f (LsVal  k  v)   = LsVal  k <$> f v
+    traverse f (BrVal  k  v n) = BrVal  k <$> f v            <*> T.traverse f n
 
 {- for debugging not yet enabled
 
