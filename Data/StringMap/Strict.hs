@@ -88,7 +88,7 @@ module Data.StringMap.Strict
         , difference
         , differenceWith
         , differenceWithKey
-        
+
         -- ** Interset
         , intersection
         , intersectionWith
@@ -104,6 +104,10 @@ module Data.StringMap.Strict
         -- * Folds
         , fold
         , foldWithKey
+        , foldr
+        , foldrWithKey
+        , foldl
+        , foldlWithKey
 
         -- * Conversion
         , keys
@@ -135,8 +139,8 @@ import           Data.StringMap.Base        hiding (adjust, adjustWithKey,
 import qualified Data.StringMap.Base        as Base
 import           Data.StringMap.FuzzySearch
 
-import           Prelude                    hiding (lookup, map, mapM, null,
-                                             succ)
+import           Prelude                    hiding (foldl, foldr, lookup, map,
+                                             mapM, null, succ)
 
 --import Data.Strict.Tuple
 import qualified Data.List                  as L
