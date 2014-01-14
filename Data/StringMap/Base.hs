@@ -139,9 +139,10 @@ module Data.StringMap.Base
         )
 where
 
-import           Prelude                  hiding (foldl, foldr, lookup, map, mapM, null, succ)
+import           Prelude                  hiding (foldl, foldr, lookup, map,
+                                           mapM, null, succ)
 
-import           Control.Applicative      ((<$>), (<*>), pure)
+import           Control.Applicative      (pure, (<$>), (<*>))
 import           Control.Arrow
 import           Control.DeepSeq
 
@@ -1264,7 +1265,7 @@ instance Sizeable Key1 where
             (C3 _ _ _ k1)   -> constrStats "C3"  x <> statsOf k1
             (C4 _ _ _ _ k1) -> constrStats "C4"  x <> statsOf k1
 
-instance Sizeable v => Sizeable (StringMap v) where
+instance (Sizeable v, Typeable v) => Sizeable (StringMap v) where
     dataOf x
         = case x of
             Empty            -> dataOfSingleton
