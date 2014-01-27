@@ -41,7 +41,9 @@ consA :: Int -> Attr -> Attr
 consA n a = mkA [n] `mappend` a
 
 check :: String -> Map -> IO ()
-check msg !m = assertNFNamed msg m
+check msg !m
+    = do putStrLn msg
+         assertNFNamed msg m
 
 main :: IO ()
 main =
