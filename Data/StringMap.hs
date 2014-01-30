@@ -79,6 +79,7 @@ module Data.StringMap
     -- ** Union
     , union
     , unionWith
+    , unionWithConv
     , unionWithKey
 
     -- ** Difference

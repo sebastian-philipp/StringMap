@@ -81,6 +81,7 @@ module Data.StringMap.Base
         -- ** Union
         , union
         , unionWith
+        , unionWithConv
         , unionWithKey
 
         -- ** Difference
@@ -685,6 +686,40 @@ union' f pt1 pt2                                = uni (norm pt1) (norm pt2)
     uni t1@(Branch c1 s1 n1) t2@(Branch c2 s2 n2)
         | c1 <  c2                              = branch c1       s1     (uni' n1 t2)
         | c1 >  c2                              = branch c2          s2  (uni' t1 n2)
+        | otherwise                             = branch c1 (uni' s1 s2) (uni' n1 n2)
+    uni _                    _                  = normError "union'"
+
+
+-- ----------------------------------------
+
+-- | Generalisation of 'unionWith'. The second map may have another attribute type than the first one.
+-- Conversion and merging of the maps is done in a single step.
+-- This is much more efficient than mapping the second map and then call 'unionWith'
+--
+-- @unionWithConf to (\ x y -> x `op` to y) m1 m2 = unionWith op m1 (fmap to m2)@
+
+unionWithConv                                   :: (b -> a) -> (a -> b -> a) -> StringMap a -> StringMap b -> StringMap a
+unionWithConv                                   = unionG'
+
+unionG'                                         :: (b -> a) -> (a -> b -> a) -> StringMap a -> StringMap b -> StringMap a
+unionG' to f pt1 pt2                            = uni (norm pt1) (norm pt2)
+    where
+    uni' t1' t2'                                = unionG' to f (norm t1') (norm t2')
+
+    uni     Empty                Empty          = empty
+    uni     Empty               (Val v2 t2)     = val (to v2) (map to t2)
+    uni     Empty               (Branch c2 s2 n2)
+                                                = branch c2 (map to s2) (map to n2)
+
+    uni    (Val v1 t1)           Empty          = val    v1     t1
+    uni    (Val v1 t1)          (Val v2 t2)     = val (f v1 v2) (uni' t1 t2)
+    uni    (Val v1 t1)       t2@(Branch _ _ _)  = val    v1     (uni' t1 t2)
+
+    uni    (Branch c1 s1 n1)     Empty          = branch c1 s1 n1
+    uni t1@(Branch _  _  _ )    (Val v2 t2)     = val (to v2) (uni' t1 t2)
+    uni t1@(Branch c1 s1 n1) t2@(Branch c2 s2 n2)
+        | c1 <  c2                              = branch c1       s1     (uni' n1 t2)
+        | c1 >  c2                              = branch c2 (map to s2)  (uni' t1 n2)
         | otherwise                             = branch c1 (uni' s1 s2) (uni' n1 n2)
     uni _                    _                  = normError "union'"
 

@@ -12,3 +12,4 @@ benchmarks/bench-*
 benchmarks/en_EN.dict
 .cabal-sandbox/
 cabal.sandbox.config
+

@@ -76,6 +76,7 @@ module Data.StringMap.Lazy
     -- ** Union
     , union
     , unionWith
+    , unionWithConv
     , unionWithKey
 
     -- ** Difference
@@ -123,4 +124,5 @@ import           Data.StringMap.Base
 import           Data.StringMap.FuzzySearch
 import           Prelude                    hiding (lookup, map, mapM, null,
                                              succ)
+-- ----------------------------------------------------------------------------
 
