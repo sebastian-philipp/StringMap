@@ -47,6 +47,7 @@ main = do
        , testCase "updateWithKey" test_updateWithKey
        , testCase "union" test_union
        , testCase "unionWith" test_unionWith
+       , testCase "unionWithConv" test_unionWithConv
        , testCase "unionWithKey" test_unionWithKey
        , testCase "difference" test_difference
        , testCase "differenceWith" test_differenceWith
@@ -239,6 +240,10 @@ test_unionWith = do
   unionWith (+) (fromList [("a",_1), ("ab", 3)]) (fromList [("a", 2), ("c",_4)]) @?= fromList [("a", 3), ("ab", 3), ("c",_4)]
   unionWith (+) empty (fromList [("a", 2), ("c",_4)]) @?= fromList [("a", 2), ("c",_4)]
 
+test_unionWithConv :: Assertion
+test_unionWithConv = do
+  unionWithConv read (\ x y -> x + read y) (fromList [("a",_1), ("ab", 3)]) (fromList [("a", "2"), ("c",show _4)]) @?= fromList [("a", 3), ("ab", 3), ("c",_4)]
+  unionWithConv read (\ x y -> x + read y) empty (fromList [("a", "2"), ("c", show _4)]) @?= fromList [("a", 2), ("c",_4)]
 
 test_unionWithKey :: Assertion
 test_unionWithKey =

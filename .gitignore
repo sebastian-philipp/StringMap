@@ -10,3 +10,6 @@ StringMap.pro.user*
 *~
 benchmarks/bench-*
 benchmarks/en_EN.dict
+cabal.sandbox.config
+xit: command not found
+.cabal-sandbox/
