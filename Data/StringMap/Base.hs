@@ -1,4 +1,5 @@
 {-# LANGUAGE BangPatterns       #-}
+{-# LANGUAGE CPP                #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 
 -- ----------------------------------------------------------------------------
@@ -152,11 +153,14 @@ import qualified Data.Foldable            as F
 import qualified Data.List                as L
 import qualified Data.Map                 as M
 import           Data.Maybe               hiding (mapMaybe)
-import           Data.Size
 import           Data.StringMap.StringSet
 import           Data.StringMap.Types
 import qualified Data.Traversable         as T
 import           Data.Typeable
+
+#if sizeable
+import           Data.Size
+#endif
 
 -- ----------------------------------------
 
@@ -1272,6 +1276,7 @@ instance (Binary a) => Binary (StringMap a) where
                    _ -> fail "StringMap.get: error while decoding StringMap"
 
 -- ----------------------------------------
+#if sizeable
 --
 -- space statistics
 
@@ -1328,5 +1333,5 @@ instance (Sizeable v, Typeable v) => Sizeable (StringMap v) where
             (BrSeL k v n)  -> constrStats "BrSeL"  x <> statsOf k <> statsOf v <> statsOf n
             (BrVal _ v n)  -> constrStats "BrVal"  x <> statsOf v <> statsOf n
             (LsVal _ v)    -> constrStats "LsVal"  x <> statsOf v
-
+#endif
 -- ----------------------------------------

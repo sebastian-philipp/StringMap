@@ -1,15 +1,15 @@
+{-# LANGUAGE CPP #-}
+
 module Main
 where
 import           Data.StringMap
 import           Data.StringMap.Base                  (deepUnNorm)
 
 import qualified Data.Char                            as Char (intToDigit)
-import qualified Data.List                            as List (nubBy, foldl)
+import qualified Data.List                            as List (foldl, nubBy)
 import qualified Data.Map                             as Map (empty, fromList,
                                                               map, toList)
 import qualified Data.Set                             as Set
-import           Data.Size
-
 import           Prelude                              hiding (filter, foldl,
                                                        foldr, lookup, map, null)
 
@@ -19,6 +19,11 @@ import           Test.Framework.Providers.QuickCheck2
 import           Test.HUnit                           hiding (Test, Testable)
 import           Text.Show.Functions                  ()
 
+#if sizeable
+import           Data.Size
+#endif
+
+-- ----------------------------------------
 
 default (Int)
 
@@ -78,9 +83,11 @@ main = do
        , testProperty "insert to singleton"  prop_singleton
        , testProperty "map a StringMap" prop_map
        , testProperty "fromList - toList" prop_fromListToList
-       , testProperty "sizeof" prop_sizeof
        , testProperty "prop_range" prop_range
        , testProperty "prop_intersection" prop_intersection
+#if sizeable
+       , testProperty "sizeof" prop_sizeof
+#endif
        ]
 
 ------------------------------------------------------------------------
@@ -389,9 +396,11 @@ prop_map f l = (toListShortestFirst.(map f).fromList) l `cmpset'` ((Map.toList).
 prop_fromListToList :: [(Key, Int)] -> Bool
 prop_fromListToList l = ((toList.fromList.makeUnique) l) `cmpset'` (makeUnique l)
 
+#if sizeable
 prop_sizeof :: [(Key, Int)] -> Bool
 prop_sizeof [] = True
 prop_sizeof l = (dataSize . objectsOf . fromList) l >= (dataSize . objectsOf . fromList . tail) l
+#endif
 
 prop_range :: [Key] -> Key -> Key -> Bool
 prop_range l lower' upper' = validInside && validOutside
@@ -414,9 +423,10 @@ prop_range l lower' upper' = validInside && validOutside
 
 prop_intersection :: [Key] -> [Key] -> Bool
 prop_intersection k1s k2s = ((lToM k1s) `intersection` (lToM k2s)) `eqMS` ((Set.fromList k1s) `Set.intersection` (Set.fromList k2s))
-  where 
+  where
     lToM ks = fromList $ zip ks [1..]
     eqMS :: StringMap Int -> Set.Set Key -> Bool
     eqMS m s = (keys m) == (Set.toList s)
 
+-- ----------------------------------------
 

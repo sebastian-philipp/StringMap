@@ -1,5 +1,5 @@
 name:         data-stringmap
-version:      0.9.6.0
+version:      0.9.6.1
 license:      MIT
 license-file: LICENSE
 author:       Uwe Schmidt, Sebastian Philipp
@@ -14,72 +14,131 @@ description:  An efficient implementation of maps from strings to arbitrary valu
               "Data.Map". The main differences are the special
               'prefixFind' functions, which can be used to perform prefix queries.
 
-build-type:   Simple
-cabal-version:  >=1.8
+build-type:     Simple
+cabal-version:  >= 1.10
+
 extra-source-files:
-    tests/*.hs
-    benchmarks/*.hs
+        tests/*.hs
+        benchmarks/*.hs
+
+flag with-sizeable
+  default:      False
+  manual:       True
+
+-- disable with cabal test -f-test-properties
+flag test-properties
+  default:      True
+  manual:       True
+
+-- enable with cabal test -ftest-strict
+flag test-strict
+  default:      False
+  manual:       True
 
 source-repository head
-    type:     git
-    location: https://github.com/sebastian-philipp/StringMap.git
+  type:         git
+  location:     https://github.com/sebastian-philipp/StringMap.git
 
-Library
-    build-depends: base       >= 4.5   && < 5,
-                   data-size  >= 0.1.3 && < 1,
-                   deepseq    >= 1.2   && < 2,
-                   binary     >= 0.5   && < 1,
-                   containers >= 0.4   && < 1
+library
+  build-depends:
+                base       >= 4.5   && < 5
+              , deepseq    >= 1.2   && < 2
+              , binary     >= 0.5   && < 1
+              , containers >= 0.4   && < 1
 
-    ghc-options: -O2 -Wall -fwarn-tabs -fno-warn-unused-binds
+  ghc-options:  -O2 -Wall -fwarn-tabs -fno-warn-unused-binds
 
-    exposed-modules:
-        Data.StringMap
-        Data.StringMap.Lazy
-        Data.StringMap.Strict
-        Data.StringMap.StringSet
-        Data.StringMap.Types
-        Data.StringMap.Base
+  exposed-modules:
+                Data.StringMap
+                Data.StringMap.Lazy
+                Data.StringMap.Strict
+                Data.StringMap.StringSet
+                Data.StringMap.Types
+                Data.StringMap.Base
 
-    other-modules:
-        Data.StringMap.FuzzySearch
+  other-modules:
+                Data.StringMap.FuzzySearch
 
-  other-extensions:    DeriveDataTypeable
-                     , BangPatterns
+  default-language:
+                Haskell2010
+
+  default-extensions:
+                CPP
+
+  other-extensions:
+                DeriveDataTypeable
+              , BangPatterns
+
+  if flag(test-strict)
+    build-depends:
+                bytestring == 0.10.0.2
+
+  if flag(with-sizeable)
+    build-depends:
+                data-size  >= 0.1.3 && < 1
+
+    cpp-options:
+                -Dsizeable=1
 
 test-suite properties
-  type:            exitcode-stdio-1.0
-  main-is:         StringMapProperties.hs
+  type:         exitcode-stdio-1.0
+  main-is:      StringMapProperties.hs
 
-  build-depends:   data-stringmap             ,
-                   base                       >= 4.5,
-                   containers                 >= 0.4,
-                   data-size                  >= 0.1.1 && < 1,
-                   deepseq                    >= 1.2   && < 2,
-                   ghc-heap-view              >= 0.5,
-                   HUnit                      >= 1.2,
-                   QuickCheck                 >= 2.4,
-                   test-framework             >= 0.6,
-                   test-framework-quickcheck2 >= 0.2,
-                   test-framework-hunit       >= 0.2
+  if !flag(test-properties)
+    buildable: False
+  else
+    build-depends:
+                data-stringmap
+              , base
+              , containers
+              , deepseq
+              , ghc-heap-view              >= 0.5
+              , HUnit                      >= 1.2
+              , QuickCheck                 >= 2.4
+              , test-framework             >= 0.6
+              , test-framework-quickcheck2 >= 0.2
+              , test-framework-hunit       >= 0.2
 
-  ghc-options:    -Wall -fwarn-tabs
-  hs-source-dirs: tests
+    if flag(with-sizeable)
+      build-depends:
+                data-size
+
+  default-language:
+                Haskell2010
+
+  ghc-options:  -Wall -fwarn-tabs
+
+  hs-source-dirs:
+                tests
 
 test-suite strict
-  type:            exitcode-stdio-1.0
-  main-is:         StringMapStrict.hs
+  type:         exitcode-stdio-1.0
+  main-is:      StringMapStrict.hs
 
-  build-depends:   data-stringmap,
-                   base                       >= 4.5,
-                   containers                 >= 0.4,
-                   HUnit                      >= 1.2,
-                   QuickCheck                 >= 2.4,
-                   test-framework             >= 0.6,
-                   test-framework-quickcheck2 >= 0.2,
-                   test-framework-hunit       >= 0.2,
-                   ghc-heap-view              >= 0.5,
-                   deepseq                    >= 1.2 && < 2
+  if !flag(test-strict)
+    buildable: False
+  else
+    build-depends:
+                data-stringmap
+              , base
+              , bytestring                 == 0.10.0.2
+              , containers
+              , deepseq
+              , ghc-heap-view              >= 0.5
+              , HUnit                      >= 1.2
+              , QuickCheck                 >= 2.4
+              , test-framework             >= 0.6
+              , test-framework-quickcheck2 >= 0.2
+              , test-framework-hunit       >= 0.2
 
-  ghc-options:    -Wall -fwarn-tabs
-  hs-source-dirs: tests
+    if flag(with-sizeable)
+      build-depends:
+                data-size
+
+  default-language:
+                Haskell2010
+
+  ghc-options:  -Wall -fwarn-tabs
+
+  hs-source-dirs:
+                tests
