@@ -1,3 +1,4 @@
+/tests/en_US.dict
 /benchmarks/en_US.dict
 dist
 cabal-dev
@@ -5,7 +6,6 @@ cabal-dev
 *.hi
 *.chi
 *.chs.h
-StringMap.pro.user*
 .directory
 *~
 benchmarks/bench-*

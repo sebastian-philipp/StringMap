@@ -2,7 +2,7 @@
 
 {- |
   Module     : Data.StringMap.FuzzySearch
-  Copyright  : Copyright (C) 2009-2012 Uwe Schmidt
+  Copyright  : Copyright (C) 2009-2014 Uwe Schmidt, Sebastian Philipp
   License    : MIT
 
   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
@@ -39,9 +39,12 @@ import           Data.StringMap.StringSet
 prefixFilter                    :: Key -> StringMap a -> StringMap a 
 prefixFilter k                  = cutPx' (singlePS k)
 
+-- | Same as 'prefixFilterNoCase', bur case insensitive
+
 prefixFilterNoCase              :: Key -> StringMap a -> StringMap a 
 prefixFilterNoCase k            = cutPx' (noCaseKeys k)
 
+-- | Same as 'Lazy.lookup', but case insensitive
 lookupNoCase                    :: Key -> StringMap a -> StringMap a 
 lookupNoCase k                  = cutAllPx' (noCaseKeys k)
 

@@ -4,7 +4,7 @@
 
 {- |
   Module     : Data.StringMap.StringSet
-  Copyright  : Copyright (C) 2010 Uwe Schmidt
+  Copyright  : Copyright (C) 2010-2014 Uwe Schmidt
   License    : MIT
 
   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)

@@ -6,7 +6,7 @@
 
 {- |
   Module     : Data.StringMap.Strict
-  Copyright  : Copyright (C) 2009-2013 Uwe Schmidt, Sebastian Philipp
+  Copyright  : Copyright (C) 2009-2014 Uwe Schmidt, Sebastian Philipp (sebastian@spawnhost.de)
   License    : MIT
 
   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
@@ -82,7 +82,7 @@ module Data.StringMap.Base
         -- ** Union
         , union
         , unionWith
-        , unionWithConv
+        , unionMapWith
         , unionWithKey
 
         -- ** Difference
@@ -292,6 +292,9 @@ fromKey k1                      = L.foldr cons1 Nil k1
 
 -- smart constructors
 
+-- | Creates an empty string map
+--
+-- > null $ empty == True
 empty                           :: StringMap v
 empty                           = Empty
 
@@ -589,7 +592,9 @@ lookupLE k0                     = look k0 . norm
     look _ _                    = normError "lookupLE"
 
 -- | Combination of 'lookupLE' and 'lookupGE'
--- @keys $ lookupRange "a" "b" $ fromList $ zip ["", "a", "ab", "b", "ba", "c"] [1..] = ["a","ab","b"]@
+-- 
+-- > keys $ lookupRange "a" "b" $ fromList $ zip ["", "a", "ab", "b", "ba", "c"] [1..] = ["a","ab","b"]
+-- 
 -- For all keys in @k = keys $ lookupRange lb ub m@, this property holts true: @k >= ub && k <= lb@
 
 lookupRange                     :: Key -> Key -> StringMap a -> StringMap a
@@ -608,7 +613,7 @@ prefixFind k                    = elems . lookupPx' k
 prefixFindWithKey               :: Key -> StringMap a -> [(Key, a)]
 prefixFindWithKey k             = fmap (first (k ++)) . toList . lookupPx' k
 
-{-# DEPRECATED prefixFindWithKey "use @toList . prefixFilter@ instead" #-}
+{-# DEPRECATED prefixFindWithKey "use @ 'toList' . 'prefixFilter' @ instead" #-}
 
 -- ----------------------------------------
 
@@ -663,13 +668,17 @@ update' f k0                    = upd k0 . norm
 -- | /O(n+m)/ Left-biased union of two maps. It prefers the first map when duplicate keys are
 -- encountered, i.e. ('union' == 'unionWith' 'const').
 
-union                                           :: StringMap a -> StringMap a -> StringMap a
-union                                           = union' const
+union                           :: StringMap a -> StringMap a -> StringMap a
+union                           = union' const
 
--- | /O(n+m)/ Union with a combining function.
+{-# INLINE union #-}
 
-unionWith                                       :: (a -> a -> a) -> StringMap a -> StringMap a -> StringMap a
-unionWith                                       = union'
+-- | /O(n+m)/ 'union' with a combining function.
+
+unionWith                       :: (a -> a -> a) -> StringMap a -> StringMap a -> StringMap a
+unionWith                       = union'
+
+{-# INLINE unionWith #-}
 
 union'                                          :: (a -> a -> a) -> StringMap a -> StringMap a -> StringMap a
 union' f pt1 pt2                                = uni (norm pt1) (norm pt2)
@@ -693,7 +702,6 @@ union' f pt1 pt2                                = uni (norm pt1) (norm pt2)
         | otherwise                             = branch c1 (uni' s1 s2) (uni' n1 n2)
     uni _                    _                  = normError "union'"
 
-
 -- ----------------------------------------
 
 -- | Generalisation of 'unionWith'. The second map may have another attribute type than the first one.
@@ -702,8 +710,8 @@ union' f pt1 pt2                                = uni (norm pt1) (norm pt2)
 --
 -- @unionWithConf to (\ x y -> x `op` to y) m1 m2 = unionWith op m1 (fmap to m2)@
 
-unionWithConv                                   :: (b -> a) -> (a -> b -> a) -> StringMap a -> StringMap b -> StringMap a
-unionWithConv                                   = unionG'
+unionMapWith                                   :: (b -> a) -> (a -> b -> a) -> StringMap a -> StringMap b -> StringMap a
+unionMapWith                                   = unionG'
 
 unionG'                                         :: (b -> a) -> (a -> b -> a) -> StringMap a -> StringMap b -> StringMap a
 unionG' to f pt1 pt2                            = uni (norm pt1) (norm pt2)
@@ -729,7 +737,7 @@ unionG' to f pt1 pt2                            = uni (norm pt1) (norm pt2)
 
 -- ----------------------------------------
 
--- | /O(n+m)/ Union with a combining function, including the key.
+-- | /O(n+m)/ 'union' with a combining function, including the key.
 
 unionWithKey                                    :: (Key -> a -> a -> a) -> StringMap a -> StringMap a -> StringMap a
 unionWithKey f                                  = union'' f id
@@ -759,18 +767,18 @@ union'' f kf pt1 pt2                            = uni (norm pt1) (norm pt2)
 
 -- ----------------------------------------
 --
--- | /(O(min(n,m))/ Difference between two tries (based on keys).
+-- | /(O(min(n,m))/ Difference between two string maps (based on keys).
 
 difference                      :: StringMap a -> StringMap b -> StringMap a
 difference                      = differenceWith (const (const Nothing))
 
--- | /(O(min(n,m))/ Difference with a combining function. If the combining function always returns
+-- | /(O(min(n,m))/ 'difference' with a combining function. If the combining function always returns
 -- 'Nothing', this is equal to proper set difference.
 
 differenceWith                  :: (a -> b -> Maybe a) -> StringMap a -> StringMap b -> StringMap a
 differenceWith f                = differenceWithKey (const f)
 
--- | /O(min(n,m))/ Difference with a combining function, including the key. If two equal keys are
+-- | /O(min(n,m))/ 'difference' with a combining function, including the key. If two equal keys are
 -- encountered, the combining function is applied to the key and both values. If it returns
 -- 'Nothing', the element is discarded, if it returns 'Just' a value, the element is updated
 -- with the new value.
@@ -804,14 +812,14 @@ diff'' f kf pt1 pt2             = dif (norm pt1) (norm pt2)
 
 -- ----------------------------------------
 -- | /O(min(n,m))/ intersection is required to allow all major set operations:
---    AND = intersection
---    OR = union
---    AND NOT = difference
+--    AND = 'intersection'
+--    OR = 'union'
+--    AND NOT = 'difference'
 
 intersection                     :: StringMap a -> StringMap a -> StringMap a
 intersection t1 t2               = intersectionWith const t1 t2
 
--- | /O(min(n,m))/ intersection with a modification function
+-- | /O(min(n,m))/ 'intersection' with a modification function
 
 intersectionWith                 :: (a -> b -> c) -> StringMap a -> StringMap b -> StringMap c
 intersectionWith f tree1 tree2   = intersection' (norm tree1) (norm tree2)
@@ -870,12 +878,14 @@ cutAllPx'                       = cutPx'' (cv . norm)
 
 -- ----------------------------------------
 
--- | /O(n)/ Map a function over all values in the prefix tree.
+-- | /O(n)/ Map a function over all values in the string map.
 
 map                             :: (a -> b) -> StringMap a -> StringMap b
 map f                           = mapWithKey (const f)
 
 {-# INLINE map #-}
+
+-- | /O(n)/ Same as 'map', but with an additional paramter
 
 mapWithKey                      :: (Key -> a -> b) -> StringMap a -> StringMap b
 mapWithKey f                    = map' f id
@@ -903,7 +913,8 @@ map' f                          = mp'
 
 {-# INLINE map' #-}
 
--- | /O(n)/ Updates a value or deletes the element if the result of the updating function is 'Nothing'.
+-- | /O(n)/ Updates a value or deletes the element,
+-- if the result of the updating function is 'Nothing'.
 
 mapMaybe                          :: (a -> Maybe b) -> StringMap a -> StringMap b
 mapMaybe                          = mapMaybe'
@@ -914,6 +925,7 @@ mapMaybe'                       :: (a -> Maybe b) -> StringMap a -> StringMap b
 mapMaybe' f                     = upd . norm
     where
     upd'                        = mapMaybe' f
+
     upd (Branch c' s' n')       = branch c' (upd' s') (upd' n')
     upd Empty                   = empty
     upd (Val v' t')             = maybe t (flip val t) $ f v'
@@ -945,12 +957,12 @@ map'' f k                       = mapn . norm
 
 -- ----------------------------------------
 
--- | Monadic map
+-- | Monadic 'map'
 
 mapM                            :: Monad m => (a -> m b) -> StringMap a -> m (StringMap b)
 mapM f                          = mapWithKeyM (const f)
 
--- | Monadic mapWithKey
+-- | Monadic 'mapWithKey'
 
 mapWithKeyM                     :: Monad m => (Key -> a -> m b) -> StringMap a -> m (StringMap b)
 mapWithKeyM f                   = mapM'' f id
@@ -971,7 +983,7 @@ mapM'' f k                      = mapn . norm
 
 -- ----------------------------------------
 --
--- A prefix tree visitor
+-- A string map visitor
 
 data StringMapVisitor a b      = PTV
     { v_empty  :: b
@@ -1082,7 +1094,7 @@ foldTopDown f r k0              = fo k0 . norm
 toMap                           :: StringMap a -> M.Map Key a
 toMap                           = foldWithKey M.insert M.empty
 
--- | /O(n)/ Convert an ordinary map into a Prefix tree
+-- | /O(n)/ Convert an ordinary map into a string map
 
 fromMap                         :: M.Map Key a -> StringMap a
 fromMap                         = M.foldrWithKey insert empty
@@ -1092,7 +1104,8 @@ fromMap                         = M.foldrWithKey insert empty
 toList                          :: StringMap a -> [(Key, a)]
 toList                          = foldWithKey (\k v r -> (k, v) : r) []
 
--- | /O(n)/ Creates a trie from a list of key\/value pairs.
+-- | /O(n)/ Creates a string map from a list of key\/value pairs.
+
 fromList                        :: [(Key, a)] -> StringMap a
 fromList                        = L.foldl' (\p (k, v) -> insert k v p) empty
 
@@ -1104,7 +1117,7 @@ size                            = fold (const (+1)) 0
 elems                           :: StringMap a -> [a]
 elems                           = fold (:) []
 
--- | /O(n)/ Returns all values.
+-- | /O(n)/ Returns all keys.
 keys                            :: StringMap a -> [Key]
 keys                            = foldWithKey (\ k _v r -> k : r) []
 
@@ -1154,7 +1167,7 @@ subForest _  _                  = error "StringMap.Base.subForest: Pattern match
 prefixFindWithKeyBF             :: Key -> StringMap a -> [(Key, a)]
 prefixFindWithKeyBF k           = fmap (first (k ++)) . toListShortestFirst . lookupPx' k
 
-{-# DEPRECATED prefixFindWithKeyBF "use @toListShortestFirst . prefixFilter@ instead" #-}
+{-# DEPRECATED prefixFindWithKeyBF "use @ 'toListShortestFirst' . 'prefixFilter' @ instead" #-}
 
 -- ----------------------------------------
 

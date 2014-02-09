@@ -1,9 +1,9 @@
 name:         data-stringmap
-version:      0.9.6.1
+version:      1.0.0
 license:      MIT
 license-file: LICENSE
 author:       Uwe Schmidt, Sebastian Philipp
-maintainer:   uwe@fh-wedel.de, sebastian@spawnhost.de
+maintainer:   Uwe Schmidt (uwe@fh-wedel.de), Sebastian Philipp (sebastian@spawnhost.de)
 bug-reports:  https://github.com/sebastian-philipp/StringMap/issues
 synopsis:     An efficient implementation of maps from strings to arbitrary values
 category:     Data Structures

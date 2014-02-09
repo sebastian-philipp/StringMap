@@ -4,10 +4,10 @@
 
 {- |
   Module     : Data.StringMap
-  Copyright  : Copyright (C) 2009-2013 Uwe Schmidt, Sebastian Philipp
+  Copyright  : Copyright (C) 2009-2014 Uwe Schmidt, Sebastian Philipp
   License    : MIT
 
-  Maintainer : Uwe Schmidt (uwe@fh-wedel.de), Sebastian Philipp
+  Maintainer : Uwe Schmidt (uwe@fh-wedel.de), Sebastian Philipp (sebastian@spawnhost.de)
   Stability  : experimental
   Portability: not portable
 
@@ -79,7 +79,7 @@ module Data.StringMap
     -- ** Union
     , union
     , unionWith
-    , unionWithConv
+    , unionMapWith
     , unionWithKey
 
     -- ** Difference

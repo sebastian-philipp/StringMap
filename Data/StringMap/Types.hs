@@ -4,7 +4,7 @@
 
 {- |
   Module     : Data.StringMap.Types
-  Copyright  : Copyright (C) 2009-2012 Uwe Schmidt
+  Copyright  : Copyright (C) 2009-2014 Uwe Schmidt
   License    : MIT
 
   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)

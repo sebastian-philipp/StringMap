@@ -4,10 +4,10 @@
 
 {- |
   Module     : Data.StringMap.Strict
-  Copyright  : Copyright (C) 2009-2013 Uwe Schmidt, Sebastian Philipp
+  Copyright  : Copyright (C) 2009-2014 Uwe Schmidt, Sebastian Philipp
   License    : MIT
 
-  Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
+  Maintainer : Uwe Schmidt (uwe@fh-wedel.de), Sebastian Philipp (sebastian@spawnhost.de)
   Stability  : experimental
   Portability: not portable
 
@@ -82,7 +82,7 @@ module Data.StringMap.Strict
         -- ** Union
         , union
         , unionWith
-        , unionWithConv
+        , unionMapWith
         , unionWithKey
 
         -- ** Difference
@@ -136,17 +136,14 @@ import           Data.StringMap.Base        hiding (adjust, adjustWithKey,
                                              insertWith, insertWithKey, map,
                                              mapM, mapMaybe, mapWithKey,
                                              mapWithKeyM, singleton, union,
-                                             unionWith, unionWithConv, update, updateWithKey)
+                                             unionWith, unionMapWith, update, updateWithKey)
 import qualified Data.StringMap.Base        as Base
 import           Data.StringMap.FuzzySearch
 
 import           Prelude                    hiding (foldl, foldr, lookup, map,
                                              mapM, null, succ)
 
---import Data.Strict.Tuple
 import qualified Data.List                  as L
---import Data.BitUtil
---import Data.StrictPair
 
 -- ----------------------------------------
 
@@ -186,10 +183,6 @@ insertWith f !k v t              = insert' f v k t
 insertWithKey                   :: (Key -> a -> a -> a) -> Key -> a -> StringMap a -> StringMap a
 insertWithKey f !k               = insertWith (f k) k
 
--- | /O(n)/ Creates a trie from a list of key\/value pairs.
-
-fromList                        :: [(Key, a)] -> StringMap a
-fromList                        = L.foldl' (\p (k, v) -> insert k v p) empty
 
 -- | /O(min(n,L))/ Updates a value at a given key (if that key is in the trie) or deletes the
 -- element if the result of the updating function is 'Nothing'. If the key is not found, the trie
@@ -204,7 +197,7 @@ update                          = update'
 -- | /O(min(n,L))/ Updates a value at a given key (if that key is in the trie) or deletes the
 -- element if the result of the updating function is 'Nothing'. If the key is not found, the trie
 -- is returned unchanged.
---  The updated value is evaluated to WHNF before insertion.
+-- The updated value is evaluated to WHNF before insertion.
 
 updateWithKey                   :: (Key -> a -> Maybe a) -> Key -> StringMap a -> StringMap a
 updateWithKey f k               = update' (f k) k
@@ -229,54 +222,11 @@ adjustWithKey f k               = update' (Just . f k) k
 
 {-# INLINE adjustWithKey #-}
 
--- | /O(n+m)/ Left-biased union of two maps. It prefers the first map when duplicate keys are
--- encountered, i.e. ('union' == 'unionWith' 'const').
 
-union                           :: StringMap a -> StringMap a -> StringMap a
-union                           = union' const
 
-{-# INLINE union #-}
 
--- | /O(n+m)/ Union with a combining function.
 
-unionWith                       :: (a -> a -> a) -> StringMap a -> StringMap a -> StringMap a
-unionWith                       = union'
 
-{-# INLINE unionWith #-}
-
--- | /O(n)/ Map a function over all values in the prefix tree.
-
-map                             :: (a -> b) -> StringMap a -> StringMap b
-map f                           = mapWithKey (const f)
-
-{-# INLINE map #-}
-
-mapWithKey                      :: (Key -> a -> b) -> StringMap a -> StringMap b
-mapWithKey f                    = map' f id
-
-{-# INLINE mapWithKey #-}
-
--- | /O(n)/ Updates a value or deletes the element,
--- if the result of the updating function is 'Nothing'.
-
-mapMaybe                          :: (a -> Maybe b) -> StringMap a -> StringMap b
-mapMaybe                          = mapMaybe'
-
-{-# INLINE mapMaybe #-}
-
--- | Monadic map
-
-mapM                            :: Monad m => (a -> m b) -> StringMap a -> m (StringMap b)
-mapM f                          = mapWithKeyM (const f)
-
-{-# INLINE mapM #-}
-
--- | Monadic mapWithKey
-
-mapWithKeyM                     :: Monad m => (Key -> a -> m b) -> StringMap a -> m (StringMap b)
-mapWithKeyM f                   = mapM'' f id
-
-{-# INLINE mapWithKeyM #-}
 
 -- ----------------------------------------
 --
@@ -334,6 +284,21 @@ update' f k0                    = upd k0 . norm
 
 -- ----------------------------------------
 
+-- | /O(n+m)/ Left-biased union of two maps. It prefers the first map when duplicate keys are
+-- encountered, i.e. ('union' == 'unionWith' 'const').
+
+union                           :: StringMap a -> StringMap a -> StringMap a
+union                           = union' const
+
+{-# INLINE union #-}
+
+-- | /O(n+m)/ 'union' with a combining function.
+
+unionWith                       :: (a -> a -> a) -> StringMap a -> StringMap a -> StringMap a
+unionWith                       = union'
+
+{-# INLINE unionWith #-}
+
 -- like union' from Base, but attr value is evaluated to WHNF
 
 union'                                          :: (a -> a -> a) -> StringMap a -> StringMap a -> StringMap a
@@ -367,8 +332,8 @@ union' f pt1 pt2                                = uni (norm pt1) (norm pt2)
 --
 -- @unionWithConf to (\ x y -> x `op` to y) m1 m2 = unionWith op m1 (fmap to m2)@
 
-unionWithConv                                   :: (b -> a) -> (a -> b -> a) -> StringMap a -> StringMap b -> StringMap a
-unionWithConv                                   = unionG'
+unionMapWith                                   :: (b -> a) -> (a -> b -> a) -> StringMap a -> StringMap b -> StringMap a
+unionMapWith                                   = unionG'
 
 unionG'                                         :: (b -> a) -> (a -> b -> a) -> StringMap a -> StringMap b -> StringMap a
 unionG' to f pt1 pt2                            = uni (norm pt1) (norm pt2)
@@ -394,6 +359,21 @@ unionG' to f pt1 pt2                            = uni (norm pt1) (norm pt2)
 
 -- ----------------------------------------
 
+
+-- | /O(n)/ Map a function over all values in the string map.
+
+map                             :: (a -> b) -> StringMap a -> StringMap b
+map f                           = mapWithKey (const f)
+
+{-# INLINE map #-}
+
+-- | /O(n)/ Same as 'map', but with an additional paramter
+
+mapWithKey                      :: (Key -> a -> b) -> StringMap a -> StringMap b
+mapWithKey f                    = map' f id
+
+{-# INLINE mapWithKey #-}
+
 -- map functions forcing evaluation of attr to WHNF
 
 map'                            :: (Key -> a -> b) -> (Key -> Key) -> StringMap a -> StringMap b
@@ -410,6 +390,14 @@ map' f k (LsVal c  v)           = LsVal  c  $! (f (k []) v)
 map' f k (BrVal c  v n)         =(BrVal  c  $! (f (k []) v))         (map' f k n)
 
 
+-- | /O(n)/ Updates a value or deletes the element,
+-- if the result of the updating function is 'Nothing'.
+
+mapMaybe                          :: (a -> Maybe b) -> StringMap a -> StringMap b
+mapMaybe                          = mapMaybe'
+
+{-# INLINE mapMaybe #-}
+
 mapMaybe'                       :: (a -> Maybe b) -> StringMap a -> StringMap b
 mapMaybe' f                     = upd . norm
     where
@@ -424,8 +412,22 @@ mapMaybe' f                     = upd . norm
     upd _                       = normError "update'"
 
 
-mapM''                          :: Monad m =>
-                                   (Key -> a -> m b) -> (Key -> Key) -> StringMap a -> m (StringMap b)
+-- ----------------------------------------
+-- | Monadic 'map'
+
+mapM                            :: Monad m => (a -> m b) -> StringMap a -> m (StringMap b)
+mapM f                          = mapWithKeyM (const f)
+
+{-# INLINE mapM #-}
+
+-- | Monadic 'mapWithKey'
+
+mapWithKeyM                     :: Monad m => (Key -> a -> m b) -> StringMap a -> m (StringMap b)
+mapWithKeyM f                   = mapM'' f id
+
+{-# INLINE mapWithKeyM #-}
+
+mapM''                          :: Monad m => (Key -> a -> m b) -> (Key -> Key) -> StringMap a -> m (StringMap b)
 mapM'' f k                      = mapn . norm
     where
     mapn'                       = mapM'' f
@@ -443,3 +445,7 @@ mapM'' f k                      = mapn . norm
 
 -- ----------------------------------------
 
+-- | /O(n)/ Creates a string map from a list of key\/value pairs.
+
+fromList                        :: [(Key, a)] -> StringMap a
+fromList                        = L.foldl' (\p (k, v) -> insert k v p) empty
