@@ -14,7 +14,7 @@ more memory than "Data.Map". The main differences are the special
 StringMap was originally developed as part of the holumbus project of the FH-Wedel.
 It is now a separate cabal package.
 
-Version 0.9
+Version 1.0.0
 
 Installation
 ------------
