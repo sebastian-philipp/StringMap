@@ -16,7 +16,7 @@ init	:
 	cabal sandbox add-source ../data-size		# development version of data-source
 
 depends	:
-	cabal install --dependencies-only --force-reinstall
+	cabal install --dependencies-only --force-reinstall --enable-tests
 
 install	:
 	cabal install --force-reinstall
