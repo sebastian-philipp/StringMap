@@ -3,10 +3,12 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
 module Data.StringMap.Dim2Search
+{-
     ( lookupGE
     , lookupLE
     , lookupRange
     )
+-}
 where
 
 import           Data.StringMap.Base hiding (lookupGE, lookupLE, lookupRange)
@@ -14,6 +16,66 @@ import           Data.StringMap.Base hiding (lookupGE, lookupLE, lookupRange)
 -- ----------------------------------------
 
 -- | remove all entries from the map with key less than the argument key
+-- 2. try
+
+-- start comparing first dimension
+
+lookupGEX                       :: Key -> StringMap a -> StringMap a
+lookupGEX k0                    = look k0 . norm
+    where
+    look [] t                   = t
+    look k@(c : k1) (Branch c' s' n')
+        | c <  c'               = branch c' (lookupGE2 k1 s') $ lookupGEX k n'
+        | c == c'               = branch c' (lookupGEY k1 s') n'
+        | otherwise             = lookupGEX k n'
+    look _          Empty       = empty
+    look k         (Val _v' t') = lookupGEX k t'
+    look _ _                    = normError "lookupGEX"
+
+-- continue comparing second dimension
+
+lookupGEY                       :: Key -> StringMap a -> StringMap a
+lookupGEY k0                    = look k0 . norm
+    where
+    look [] t                   = t
+    look k@(c : k1) (Branch c' s' n')
+        | c <  c'               = branch c' (lookupGE2 k1 s') $ lookupGEY k n'
+        | c == c'               = branch c' (lookupGEX k1 s') n'
+        | otherwise             = lookupGEY k n'
+    look _          Empty       = empty
+    look k         (Val _v' t') = lookupGEY k t'
+    look _ _                    = normError "lookupGEY"
+
+-- ordering of one dim is o.k., check only 2. dim (every second char)
+
+lookupGE2                      :: Key -> StringMap a -> StringMap a
+lookupGE2 k0                   = look k0 . norm
+    where
+    look [] t                   = t
+    look k@(c : k1) t@(Branch c' s' n')
+        | c <  c'               = t
+        | c == c'               = branch c' (lookupGE1 k1 s') n'
+        | otherwise             = lookupGE2 k n'
+    look _          Empty       = empty
+    look k         (Val _v' t') = lookupGE2 k t'
+    look _ _                    = normError "lookupGE2"
+
+-- skip char _c and continue with comparison of next char
+
+lookupGE1                 	:: Key -> StringMap a -> StringMap a
+lookupGE1 k0               = look k0 . norm
+    where
+    look [] t                   = t
+    look k@(_c : k1) (Branch c' s' n')
+                                = branch c' (lookupGE2 k1 s') $ lookupGE1 k n'
+    look _          Empty       = empty
+    look k         (Val _v' t') = lookupGE1 k t'
+    look _ _                    = normError "lookupGE1"
+
+
+
+-- | remove all entries from the map with key less than the argument key
+-- 1. try
 
 lookupGE                        :: Key -> StringMap a -> StringMap a
 lookupGE k0                     = look k0 . norm
