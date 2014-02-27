@@ -1,5 +1,5 @@
 name:         data-stringmap
-version:      1.0.0
+version:      1.0.1
 license:      MIT
 license-file: LICENSE
 author:       Uwe Schmidt, Sebastian Philipp
@@ -55,6 +55,7 @@ library
                 Data.StringMap.StringSet
                 Data.StringMap.Types
                 Data.StringMap.Base
+                Data.StringMap.Dim2Search
 
   other-modules:
                 Data.StringMap.FuzzySearch
