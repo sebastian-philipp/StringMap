@@ -3,7 +3,7 @@
 
 module Main where
 
-import           Data.List                 (nub, sort)
+import           Data.List                 (sort)
 import qualified Data.StringMap            as M
 import qualified Data.StringMap.Dim2Search as D2
 
@@ -59,13 +59,13 @@ instance Ord Point' where
               | x1 <  x2 && y1 <  y2 = True
               | otherwise            = False
 
-          leX [] [] = True			-- the result for the Y dimension is already known
+          leX [] [] = True                      -- the result for the Y dimension is already known
           leX (x1 : y1 : ds1) (x2 : y2 : ds2)
               | x1 == x2  = ds1 `leX` ds2
               | x1 <  x2  = True
               | otherwise = False
 
-          leY [] [] = True			-- the result for the X dimension is already known
+          leY [] [] = True                      -- the result for the X dimension is already known
           leY (x1 : y1 : ds1) (x2 : y2 : ds2)
               | y1 == y2  = ds1 `leY` ds2
               | y1 <  y2  = True
@@ -76,7 +76,7 @@ instance Ord Point' where
 toPoint' :: Point -> Point'
 toPoint' (P p) = P' $ intPairToKey base len p
     where
-      base =  2		-- or 10
+      base =  2         -- or 10
       len  =  10        -- or  3  (or something else)
 
 fromPoint' :: Point' -> Point
@@ -105,7 +105,7 @@ test1 = null $ propTest 20
 
 newtype Point     = P   {unP :: (Int, Int)    } deriving (Eq)
 newtype PointSet  = PS  {unPS :: [Point]       } deriving (Eq)
-                                        	-- assuming only smart constructor mkPS is used
+                                                -- assuming only smart constructor mkPS is used
 
 newtype Point'    = P'  {unP' :: String        } deriving (Eq)
 newtype PointSet' = PS' {unPS' :: M.StringMap ()} deriving (Eq)
@@ -148,7 +148,7 @@ instance Lookup Point' PointSet' where
 -- the bijection between Point and Point'
 
 pToP' :: Point -> Point'
-pToP' = P' . intPairToKey 10 5 . unP	-- base 10, 5 digits
+pToP' = P' . intPairToKey 10 5 . unP    -- base 10, 5 digits
 
 p'ToP :: Point' -> Point
 p'ToP (P' p') = P (intFromKey xs, intFromKey ys)
@@ -264,3 +264,4 @@ main :: IO ()
 main = print theTest >> return ()
 
 -- ----------------------------------------
+

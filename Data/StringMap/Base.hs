@@ -11,7 +11,7 @@
 
   Maintainer : Uwe Schmidt (uwe@fh-wedel.de)
   Stability  : experimental
-  Portability: not portable
+  Portability: portable
 
   An efficient implementation of maps from strings to arbitrary values.
 
@@ -592,9 +592,9 @@ lookupLE k0                     = look k0 . norm
     look _ _                    = normError "lookupLE"
 
 -- | Combination of 'lookupLE' and 'lookupGE'
--- 
+--
 -- > keys $ lookupRange "a" "b" $ fromList $ zip ["", "a", "ab", "b", "ba", "c"] [1..] = ["a","ab","b"]
--- 
+--
 -- For all keys in @k = keys $ lookupRange lb ub m@, this property holts true: @k >= ub && k <= lb@
 
 lookupRange                     :: Key -> Key -> StringMap a -> StringMap a
