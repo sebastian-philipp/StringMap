@@ -10,6 +10,9 @@ all1	:
 
 init	:
 	cabal sandbox init
+
+# when working with ghc >= 7.8 this is redundant
+add-src	:
 	cabal sandbox add-source ../bytestring		# local version of latest bytesting package
 	cabal sandbox add-source ../short-bytestring	# local version of latest bytesting package
 	cabal sandbox add-source ../text		# local version of latest text package
