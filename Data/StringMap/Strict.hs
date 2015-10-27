@@ -173,7 +173,7 @@ insert !k !v                    = insertWith const k v
 -- the value of @f new_value old_value@ will be inserted.
 
 insertWith                      :: (a -> a -> a) -> Key -> a -> StringMap a -> StringMap a
-insertWith f !k v t              = insert' f v k t
+insertWith f !k !v t              = insert' f v k t
 
 {-# INLINE insertWith #-}
 
