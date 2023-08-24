@@ -166,12 +166,12 @@ import           Data.Size
 
 data StringMap v       = Empty
                         | Val    { value' ::   v
-                                 , tree   :: ! (StringMap v)
+                                 , tree   :: !(StringMap v)
                                  }
                         | Branch { sym    :: {-# UNPACK #-}
-                                             ! Sym
-                                 , child  :: ! (StringMap v)
-                                 , next   :: ! (StringMap v)
+                                             !Sym
+                                 , child  :: !(StringMap v)
+                                 , next   :: !(StringMap v)
                                  }
 
                         -- the space optimisation nodes, these
@@ -181,30 +181,30 @@ data StringMap v       = Empty
                         | Leaf   { value' ::   v                -- a value at a leaf of the tree
                                  }
                         | Last   { sym    :: {-# UNPACK #-}
-                                             ! Sym              -- the last entry in a branch list
-                                 , child  :: ! (StringMap v)    -- or no branch but a single child
+                                             !Sym              -- the last entry in a branch list
+                                 , child  :: !(StringMap v)    -- or no branch but a single child
                                  }
-                        | LsSeq  { syms  :: ! Key1              -- a sequence of single childs
-                                 , child :: ! (StringMap v)     -- in a last node
+                        | LsSeq  { syms  :: !Key1              -- a sequence of single childs
+                                 , child :: !(StringMap v)     -- in a last node
                                  }
-                        | BrSeq  { syms  :: ! Key1              -- a sequence of single childs
-                                 , child :: ! (StringMap v)     -- in a branch node
-                                 , next  :: ! (StringMap v)
+                        | BrSeq  { syms  :: !Key1              -- a sequence of single childs
+                                 , child :: !(StringMap v)     -- in a branch node
+                                 , next  :: !(StringMap v)
                                  }
-                        | LsSeL  { syms   :: ! Key1             -- a sequence of single childs
+                        | LsSeL  { syms   :: !Key1             -- a sequence of single childs
                                  , value' ::   v                -- with a leaf
                                  }
-                        | BrSeL  { syms   :: ! Key1             -- a sequence of single childs
+                        | BrSeL  { syms   :: !Key1             -- a sequence of single childs
                                  , value' ::   v                -- with a leaf in a branch node
-                                 , next   :: ! (StringMap v)
+                                 , next   :: !(StringMap v)
                                  }
                         | BrVal  { sym    :: {-# UNPACK #-}
-                                             ! Sym              -- a branch with a single char
+                                             !Sym              -- a branch with a single char
                                  , value' ::   v                -- and a value
-                                 , next   :: ! (StringMap v)
+                                 , next   :: !(StringMap v)
                                  }
                         | LsVal  { sym    :: {-# UNPACK #-}
-                                              ! Sym             -- a last node with a single char
+                                              !Sym             -- a last node with a single char
                                  , value' ::   v                -- and a value
                                  }
                           deriving (Show, Eq, Ord, Typeable)
@@ -217,18 +217,18 @@ data StringMap v       = Empty
 -- for internal use in prefix tree to optimize space efficiency
 
 data Key1               = Nil
-                        | S1 {-# UNPACK #-} ! Sym
-                        | S2 {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym
-                        | S3 {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym
-                        | S4 {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym
-                        | C1 {-# UNPACK #-} ! Sym
-                                            ! Key1
-                        | C2 {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym
-                                            ! Key1
-                        | C3 {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym
-                                            ! Key1
-                        | C4 {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym  {-# UNPACK #-} ! Sym
-                                            ! Key1
+                        | S1 {-# UNPACK #-} !Sym
+                        | S2 {-# UNPACK #-} !Sym  {-# UNPACK #-} !Sym
+                        | S3 {-# UNPACK #-} !Sym  {-# UNPACK #-} !Sym  {-# UNPACK #-} !Sym
+                        | S4 {-# UNPACK #-} !Sym  {-# UNPACK #-} !Sym  {-# UNPACK #-} !Sym  {-# UNPACK #-} !Sym
+                        | C1 {-# UNPACK #-} !Sym
+                                            !Key1
+                        | C2 {-# UNPACK #-} !Sym  {-# UNPACK #-} !Sym
+                                            !Key1
+                        | C3 {-# UNPACK #-} !Sym  {-# UNPACK #-} !Sym  {-# UNPACK #-} !Sym
+                                            !Key1
+                        | C4 {-# UNPACK #-} !Sym  {-# UNPACK #-} !Sym  {-# UNPACK #-} !Sym  {-# UNPACK #-} !Sym
+                                            !Key1
                           deriving (Eq, Ord, Typeable)
 
 instance Show Key1 where
