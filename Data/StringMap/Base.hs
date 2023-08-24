@@ -421,7 +421,7 @@ singleton k v           = anyseq (fromKey k) (val v empty)
 
 -- | /O(1)/ Extract the value of a node (if there is one)
 
-value                   :: Monad m => StringMap a -> m a
+value                   :: MonadFail m => StringMap a -> m a
 value t                 = case norm t of
                           Val v _       -> return v
                           _             -> fail "StringMap.value: no value at this node"
@@ -447,7 +447,7 @@ succ t                  = case norm t of
 -- | /O(min(n,L))/ Find the value associated with a key. The function will @return@ the result in
 -- the monad or @fail@ in it if the key isn't in the map.
 
-lookup                          :: Monad m => Key -> StringMap a -> m a
+lookup                          :: MonadFail m => Key -> StringMap a -> m a
 lookup k t                      = case lookup' k t of
                                   Just v  -> return v
                                   Nothing -> fail "StringMap.lookup: Key not found"
