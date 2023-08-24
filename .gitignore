@@ -1,6 +1,7 @@
 /tests/en_US.dict
 /benchmarks/en_US.dict
 dist
+dist-newstyle/
 cabal-dev
 *.o
 *.hi

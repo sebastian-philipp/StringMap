@@ -4,7 +4,6 @@ module Main where
 import Control.DeepSeq
 import Control.Exception (evaluate)
 import Control.Monad.Trans (liftIO)
-import Criterion.Config
 import Criterion.Main
 import Data.List (foldl')
 import qualified Data.StringMap.Strict as M
@@ -22,7 +21,7 @@ main = do
     m <- return $ (M.fromList elems :: M.StringMap Int)
     defaultMainWith
         defaultConfig
-        (liftIO . evaluate $ rnf [m])
+      --(liftIO . evaluate $ rnf [m])
         [ bench "lookup" $ whnf (lookup keys) m
         , bench "insert" $ whnf (ins elems) M.empty
         , bench "insertWith empty" $ whnf (insWith elems) M.empty

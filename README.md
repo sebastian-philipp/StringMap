@@ -37,4 +37,30 @@ $ cabal install
 in the root directory. Everything else should be done automatically by cabal.
 
 
+Benchmarking
+------------
 
+Execute
+```
+$ cd StringMap
+$ cp benchmarks/space/en_US.dict
+$ cabal bench
+...
+Running 1 benchmarks...
+Benchmark bench-all: RUNNING...
+benchmarking lookup
+time                 27.78 ms   (25.56 ms .. 29.25 ms)
+                     0.981 R²   (0.955 R² .. 0.995 R²)
+mean                 31.97 ms   (30.56 ms .. 33.15 ms)
+std dev              2.811 ms   (2.310 ms .. 3.555 ms)
+variance introduced by outliers: 34% (moderately inflated)
+
+benchmarking insert
+time                 57.58 ms   (55.47 ms .. 59.29 ms)
+                     0.997 R²   (0.994 R² .. 1.000 R²)
+mean                 56.74 ms   (55.23 ms .. 58.51 ms)
+std dev              3.083 ms   (2.058 ms .. 4.828 ms)
+variance introduced by outliers: 15% (moderately inflated)
+...
+Benchmark bench-all: FINISH
+```

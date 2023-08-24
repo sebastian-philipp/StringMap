@@ -1,5 +1,5 @@
 name:         data-stringmap
-version:      1.0.1.2
+version:      1.0.2
 license:      MIT
 license-file: LICENSE
 author:       Uwe Schmidt, Sebastian Philipp
@@ -143,3 +143,15 @@ test-suite strict
 
   hs-source-dirs:
                 tests
+
+benchmark bench-all
+  type:             exitcode-stdio-1.0
+  main-is:          benchmarks/StringMap.hs
+  build-depends:    base
+                  , binary
+                  , containers
+                  , criterion
+                  , deepseq
+                  , mtl
+                  , data-stringmap
+  ghc-options:      -O2
